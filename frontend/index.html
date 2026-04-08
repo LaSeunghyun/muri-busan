@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>무리없이 부산 — 이동약자 맞춤 여행 플래너</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#003087">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="무리없이 부산">
+</head>
+<body>
+
+<!-- Skip to content (WCAG 2AA) -->
+<a href="#main-content" class="skip-to-content">본문 바로가기</a>
+
+<!-- GNB: PC 전용 상단 네비게이션 -->
+<nav class="gnb" aria-label="주 메뉴">
+  <div class="gnb-inner">
+    <a href="/" class="gnb-logo">♿ 무리없이 부산</a>
+    <ul class="gnb-menu">
+      <li><a href="/" aria-current="page">홈</a></li>
+      <li><a href="/onboarding.html">코스 추천</a></li>
+    </ul>
+    <a href="/onboarding.html" class="btn-primary gnb-cta">코스 추천받기</a>
+  </div>
+</nav>
+
+<div class="page-wrapper" role="main" id="main-content">
+  <!-- 히어로 -->
+  <section class="s1-hero" aria-label="메인 배너">
+    <div class="tag" role="text">♿ 이동약자 전용 여행 플래너</div>
+    <h1>부산, 포기하지 않아도 됩니다</h1>
+    <p>휠체어·유아차·시니어 동반 여행자를 위한<br>실증 데이터 기반 저피로 코스 추천</p>
+    <!-- PC에서만 보이는 CTA (히어로 내부) -->
+    <div class="hero-cta-wrap">
+      <button class="btn-primary" onclick="navigateTo('/onboarding.html')">무리없이 여행 시작하기 →</button>
+    </div>
+    <!-- 히어로 내부 통계 바 -->
+    <div class="hero-stats-bar" aria-label="서비스 주요 수치">
+      <div class="hero-stat-item">
+        <span class="hero-stat-icon" aria-hidden="true">🗺️</span>
+        <span class="hero-stat-text">무장애 관광지 <strong>100+곳</strong></span>
+      </div>
+      <div class="hero-stat-divider" aria-hidden="true"></div>
+      <div class="hero-stat-item">
+        <span class="hero-stat-icon" aria-hidden="true">✅</span>
+        <span class="hero-stat-text"><strong>접근성 검증</strong> 코스</span>
+      </div>
+      <div class="hero-stat-divider" aria-hidden="true"></div>
+      <div class="hero-stat-item">
+        <span class="hero-stat-icon" aria-hidden="true">✦</span>
+        <span class="hero-stat-text"><strong>AI 맞춤</strong> 추천</span>
+      </div>
+      <div class="hero-stat-divider" aria-hidden="true"></div>
+      <div class="hero-stat-item">
+        <span class="hero-stat-icon" aria-hidden="true">📅</span>
+        <span class="hero-stat-text"><strong>실시간 행사</strong> 연동</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 통계 -->
+  <section class="s1-stats" aria-label="서비스 통계">
+    <div class="s1-stat">
+      <div class="num">4<span style="font-size:14px">종</span></div>
+      <div class="lbl">이동 유형별<br>맞춤 추천</div>
+    </div>
+    <div class="s1-stat">
+      <div class="num">5h</div>
+      <div class="lbl">하루 이내<br>저피로 코스</div>
+    </div>
+    <div class="s1-stat">
+      <div class="num">16</div>
+      <div class="lbl">부산 전<br>구·군 커버</div>
+    </div>
+  </section>
+
+  <!-- 대상 -->
+  <section class="s1-who" aria-label="서비스 대상">
+    <h2>어떤 여행자를 위한 서비스인가요?</h2>
+    <div class="s1-who-grid">
+      <div class="s1-who-card">
+        <div class="icon" aria-hidden="true">♿</div>
+        <div class="name">휠체어 이용자</div>
+        <div class="desc">경사로·엘리베이터<br>접근 정보 제공</div>
+      </div>
+      <div class="s1-who-card">
+        <div class="icon" aria-hidden="true">🚶</div>
+        <div class="name">보행 보조기</div>
+        <div class="desc">평탄한 노면<br>단차 없는 코스</div>
+      </div>
+      <div class="s1-who-card">
+        <div class="icon" aria-hidden="true">👴</div>
+        <div class="name">시니어 동반</div>
+        <div class="desc">쉬는 공간 포함<br>체력 여유 동선</div>
+      </div>
+      <div class="s1-who-card">
+        <div class="icon" aria-hidden="true">🍼</div>
+        <div class="name">유아차 동반</div>
+        <div class="desc">수유실·수직 이동<br>유모차 전용 정보</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 공공데이터 안내 -->
+  <div class="s1-notice" role="note">
+    <strong>📊 공공데이터 기반 서비스</strong><br>
+    한국관광공사 TourAPI 무장애 정보 · 관광지 집중률 · OSRM 경로 최적화 및 보행 동선 데이터를 결합해 추천 근거를 제공합니다.
+  </div>
+
+  <!-- CTA (모바일 전용) -->
+  <div class="s1-cta">
+    <button class="btn-primary" onclick="navigateTo('/onboarding.html')">무리없이 여행 시작하기 →</button>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+</body>
+</html>

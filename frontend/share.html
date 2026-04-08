@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>무리없이 부산 — 일정 공유</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#003087">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="무리없이 부산">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+<!-- Skip to content (WCAG 2AA) -->
+<a href="#main-content" class="skip-to-content">본문 바로가기</a>
+
+<!-- GNB: PC 전용 상단 네비게이션 -->
+<nav class="gnb" aria-label="주 메뉴">
+  <div class="gnb-inner">
+    <a href="/" class="gnb-logo">♿ 무리없이 부산</a>
+    <ul class="gnb-menu">
+      <li><a href="/">홈</a></li>
+      <li><a href="/onboarding.html">코스 추천</a></li>
+    </ul>
+    <a href="/onboarding.html" class="btn-primary gnb-cta">코스 추천받기</a>
+  </div>
+</nav>
+
+<div class="page-wrapper share-screen" role="main" id="main-content">
+  <!-- 모바일 헤더 -->
+  <header class="app-header">
+    <button class="back-btn" aria-label="뒤로 가기" onclick="history.back()">←</button>
+    <h1>일정 공유</h1>
+  </header>
+
+  <!-- PC 2컬럼 / 모바일 단일컬럼 래퍼 -->
+  <div class="share-layout">
+    <!-- 왼쪽: 공유 카드 프리뷰 -->
+    <div class="share-preview-col">
+      <article class="share-card-preview" id="shareCard" aria-label="공유 카드">
+        <div class="loading-overlay" id="shareLoading">
+          <div class="spinner" role="status" aria-label="로딩 중"></div>
+          <p>공유 카드를 생성하는 중</p>
+        </div>
+      </article>
+    </div>
+
+    <!-- 오른쪽: 공유 액션 패널 -->
+    <div class="share-action-col">
+      <div class="share-btns" id="shareBtns" style="display:none">
+        <h2 class="share-action-title">코스 공유하기</h2>
+        <p class="share-action-desc">링크, 카카오톡, QR 코드로<br>이 코스를 친구에게 전달하세요</p>
+        <div class="share-btn-row">
+          <button class="share-app-btn device" id="deviceShareBtn" aria-label="기기 공유">📤 기기 공유</button>
+          <button class="share-app-btn link" id="copyLinkBtn" aria-label="링크 복사">🔗 링크 복사</button>
+          <button class="share-app-btn kakao" id="kakaoShareBtn" aria-label="카카오톡 공유">💬 카카오톡</button>
+          <button class="share-app-btn qr" id="qrBtn" aria-label="QR 코드 공유">📱 QR 코드</button>
+        </div>
+        <div class="share-action-divider"></div>
+        <button class="btn-primary" onclick="navigateTo('/')">홈으로 돌아가기</button>
+        <button class="btn-outline" onclick="history.back()" style="margin-top:8px">코스 상세로 돌아가기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/share.js"></script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+</body>
+</html>

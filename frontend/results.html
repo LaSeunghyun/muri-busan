@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>무리없이 부산 — 추천 결과</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#003087">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="무리없이 부산">
+</head>
+<body>
+
+<!-- Skip to content (WCAG 2AA) -->
+<a href="#main-content" class="skip-to-content">본문 바로가기</a>
+
+<!-- GNB: PC 전용 상단 네비게이션 -->
+<nav class="gnb" aria-label="주 메뉴">
+  <div class="gnb-inner">
+    <a href="/" class="gnb-logo">♿ 무리없이 부산</a>
+    <ul class="gnb-menu">
+      <li><a href="/">홈</a></li>
+      <li><a href="/onboarding.html" aria-current="page">코스 추천</a></li>
+    </ul>
+    <a href="/onboarding.html" class="btn-primary gnb-cta">코스 추천받기</a>
+  </div>
+</nav>
+
+<div id="weatherBanner" style="display:none" class="weather-banner" role="status" aria-live="polite"></div>
+
+<div class="page-wrapper" role="main" id="main-content">
+  <!-- 모바일 헤더 -->
+  <header class="app-header">
+    <button class="back-btn" aria-label="뒤로 가기" onclick="navigateTo('/onboarding.html')">←</button>
+    <h1>추천 코스</h1>
+  </header>
+
+  <!-- PC 결과 헤더 -->
+  <div class="result-pc-header">
+    <h2>맞춤 코스 추천 결과</h2>
+  </div>
+
+  <!-- 요약 -->
+  <div class="result-summary" id="resultSummary">
+    <div class="info">결과를 불러오는 중...</div>
+  </div>
+
+  <!-- 필터 탭 -->
+  <div class="result-filter-bar">
+    <nav class="filter-tabs" id="filterTabs" aria-label="코스 필터">
+      <button class="filter-tab active" data-filter="all">전체</button>
+      <button class="filter-tab" data-filter="low-fatigue">저피로순</button>
+      <button class="filter-tab" data-filter="many-spots">관광지 많은순</button>
+      <button class="filter-tab" data-filter="favorites">즐겨찾기</button>
+    </nav>
+  </div>
+
+  <!-- 결과 목록 -->
+  <section class="result-list" id="resultList" aria-label="코스 목록" aria-live="polite">
+    <div class="loading-overlay" id="loadingState">
+      <div class="spinner" role="status" aria-label="로딩 중"></div>
+      <p>맞춤 코스를 분석하고 있습니다</p>
+    </div>
+  </section>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/results.js"></script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+</body>
+</html>

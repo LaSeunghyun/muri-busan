@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title desc">
+  <title id="title">무리없이 부산 앱 아이콘</title>
+  <desc id="desc">부산의 바다를 상징하는 물결과 접근성을 나타내는 아이콘이 결합된 앱 아이콘</desc>
+  <defs>
+    <linearGradient id="bg" x1="24" y1="16" x2="168" y2="176" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#003087"/>
+      <stop offset="1" stop-color="#0A4AA8"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="48" y1="120" x2="152" y2="168" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#61C3FF"/>
+      <stop offset="1" stop-color="#90D9FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="36" fill="url(#bg)"/>
+  <circle cx="48" cy="42" r="26" fill="#2A68C7" opacity="0.55"/>
+  <path d="M24 136C44 122 63 118 82 122C99 126 115 139 134 141C151 143 165 136 176 128V192H24Z" fill="url(#wave)"/>
+  <path d="M24 150C44 140 65 138 84 143C101 147 118 157 138 157C153 157 165 152 176 146V192H24Z" fill="#D9F2FF" opacity="0.88"/>
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="90" cy="56" r="10" fill="#FFFFFF" stroke="none"/>
+    <circle cx="104" cy="112" r="24" stroke-width="10"/>
+    <path d="M92 72L105 87L126 87" stroke-width="10"/>
+    <path d="M104 88L92 117" stroke-width="10"/>
+    <path d="M92 117H120" stroke-width="10"/>
+    <path d="M118 117L135 95" stroke-width="10"/>
+  </g>
+</svg>

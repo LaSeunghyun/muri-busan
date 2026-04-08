@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>무리없이 부산 — 코스 상세</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#003087">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="무리없이 부산">
+</head>
+<body>
+
+<!-- Skip to content (WCAG 2AA) -->
+<a href="#main-content" class="skip-to-content">본문 바로가기</a>
+
+<!-- GNB: PC 전용 상단 네비게이션 -->
+<nav class="gnb" aria-label="주 메뉴">
+  <div class="gnb-inner">
+    <a href="/" class="gnb-logo">♿ 무리없이 부산</a>
+    <ul class="gnb-menu">
+      <li><a href="/">홈</a></li>
+      <li><a href="/onboarding.html" aria-current="page">코스 추천</a></li>
+    </ul>
+    <a href="/onboarding.html" class="btn-primary gnb-cta">코스 추천받기</a>
+  </div>
+</nav>
+
+<div class="page-wrapper" role="main" id="main-content">
+  <!-- 모바일 헤더 -->
+  <header class="app-header">
+    <button class="back-btn" aria-label="뒤로 가기" onclick="navigateTo('/results.html')">←</button>
+    <h1 id="courseTitle">코스 상세</h1>
+    <span class="header-action" id="shareBtn">공유</span>
+  </header>
+
+  <!-- 모바일 레이아웃: 지도 → 개요 → 타임라인 수직 배치 -->
+  <div class="mobile-course-layout">
+    <!-- 지도 영역 -->
+    <section class="map-area" id="mapArea" aria-label="코스 지도" aria-live="polite">
+      <div id="kakaoMap"></div>
+    </section>
+
+    <!-- 코스 개요 -->
+    <section class="course-overview" id="courseOverview" aria-label="코스 개요">
+      <div class="loading-overlay">
+        <div class="spinner" role="status" aria-label="로딩 중"></div>
+        <p>코스 정보를 불러오는 중</p>
+      </div>
+    </section>
+
+    <!-- 타임라인 -->
+    <section class="timeline" id="timeline" aria-label="방문 순서">
+      <h3>방문 순서</h3>
+      <div id="timelineList"></div>
+    </section>
+
+    <!-- 하단 버튼 -->
+    <div class="detail-bottom">
+      <button class="btn-primary" id="shareAction">일정 카드로 공유하기</button>
+      <button class="btn-outline" onclick="navigateTo('/results.html')">다른 코스 보기</button>
+    </div>
+  </div>
+
+  <!-- PC 레이아웃: 지도(좌) + 타임라인(우) 2컬럼 -->
+  <div class="course-detail-layout">
+    <!-- 왼쪽: 지도 패널 -->
+    <div class="map-panel">
+      <section class="map-area" id="mapAreaPc" aria-label="코스 지도 (PC)" aria-live="polite">
+        <div id="kakaoMapPc"></div>
+      </section>
+      <section class="course-overview" id="courseOverviewPc" aria-label="코스 개요 (PC)">
+        <div class="loading-overlay">
+          <div class="spinner" role="status" aria-label="로딩 중"></div>
+          <p>코스 정보를 불러오는 중</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 오른쪽: 타임라인 패널 -->
+    <div class="timeline-panel">
+      <section class="timeline" id="timelinePc" aria-label="방문 순서 (PC)">
+        <h3>방문 순서</h3>
+        <div id="timelineListPc"></div>
+      </section>
+      <div class="detail-bottom">
+        <button class="btn-primary" id="shareActionPc">일정 카드로 공유하기</button>
+        <button class="btn-outline" onclick="navigateTo('/results.html')">다른 코스 보기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/runtime-config.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/course.js"></script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+</body>
+</html>
