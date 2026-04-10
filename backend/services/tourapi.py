@@ -168,6 +168,12 @@ async def fetch_spots(area: str | None = None) -> list[dict]:
         spots = _convert_tourapi(items)
         spots = await _enrich_accessibility(spots)   # 접근성 보강
 
+        # 접근성 정보가 확실한 mock 데이터를 항상 병합
+        # (TourAPI의 detailInfo2는 대부분 접근성 정보를 반환하지 않음)
+        mock_spots = _mock()
+        existing_ids = {s["id"] for s in spots}
+        spots = spots + [m for m in mock_spots if m["id"] not in existing_ids]
+
         if area:
             spots = [s for s in spots if s["area"] == area]
         _spots_cache[cache_key] = (time.time(), spots)
