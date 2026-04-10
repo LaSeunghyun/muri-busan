@@ -12,4 +12,7 @@ COPY . .
 # HuggingFace Spaces는 7860 포트 사용
 EXPOSE 7860
 
-CMD ["sh", "-c", "python -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-7860}"]
+COPY start.sh .
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]
