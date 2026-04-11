@@ -20,6 +20,8 @@ SENIOR_REST_BONUS_M = -400.0
 # 행사/축제: 코스에 반드시 포함되도록 강한 가산점 (거리 단위=미터 기준)
 FESTIVAL_BONUS_M = -6000.0
 
+# 시니어: 경사도 상한 (이 이상이면 필터 아웃)
+SENIOR_MAX_SLOPE_PCT = 8.0
 # 보행보조기: 경사도 상한 (이 이상이면 필터 아웃)
 CARRIER_MAX_SLOPE_PCT = 5.0
 
@@ -30,6 +32,7 @@ MAX_DAILY_FATIGUE = 250.0     # 기존 100 → 가중치 하향에 맞춰 재설
 CATEGORY_REPEAT_PENALTY_M = 700.0
 AREA_REPEAT_PENALTY_M = 250.0
 NUM_ALTERNATIVES = 3  # 하루 당 대안 코스 수
+MIN_SPOTS_PER_DAY = 4  # 멀티데이 스팟 재사용 임계치 계산 기준
 
 # ── 날씨 연동 ─────────────────────────────────────────────────────
 # 비 오는 날: 실외 스팟 페널티, 실내 스팟 보너스
@@ -97,7 +100,7 @@ def _filter_spots(spots: list[dict], mobility_types: list[str], areas: list[str]
                 if spot.get("accessibility_grade", 0) < 3:
                     accessible = False
                     break
-                if spot.get("slope_pct", 0) > 8.0:
+                if spot.get("slope_pct", 0) > SENIOR_MAX_SLOPE_PCT:
                     accessible = False
                     break
             elif mt == "carrier":
@@ -337,8 +340,6 @@ def recommend_courses(
     global_used_ids: set[str] = set()  # 이전 day에서 이미 사용한 스팟 추적
 
     # 멀티데이 요청인데 풀이 너무 작을 때: 스팟 재사용 임계치 계산
-    # 최소 4개 스팟/코스 × days → 이 숫자 미만이면 재사용 허용
-    MIN_SPOTS_PER_DAY = 4
     reuse_threshold = MIN_SPOTS_PER_DAY * max(1, days)
 
     for day in range(1, days + 1):
