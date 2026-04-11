@@ -1,4 +1,4 @@
-"""Gemini 2.5 Flash Lite — AI 코스 설명 + 스팟별 가이드. 파일 캐시로 중복 호출 방지."""
+"""Gemini 2.5 Flash Lite — AI 코스 설명 + 스팟별 가이드. Supabase 캐시(파일 캐시 fallback)."""
 from __future__ import annotations
 
 import asyncio
@@ -15,6 +15,31 @@ _CACHE_DIR = Path(__file__).resolve().parent.parent / "data" / "ai_cache"
 
 _MODEL_NAME = "gemini-2.5-flash-lite"
 _client = None
+
+# Supabase 클라이언트 (lazy init)
+_supabase_client = None
+_supabase_init_failed = False
+
+
+def _get_supabase():
+    """Supabase 클라이언트 lazy init. 실패 시 None 반환 → 파일 캐시 fallback."""
+    global _supabase_client, _supabase_init_failed
+    if _supabase_client is not None or _supabase_init_failed:
+        return _supabase_client
+    url = os.getenv("SUPABASE_URL", "").strip()
+    key = os.getenv("SUPABASE_ANON_KEY", "").strip()
+    if not url or not key:
+        _supabase_init_failed = True
+        return None
+    try:
+        from supabase import create_client
+        _supabase_client = create_client(url, key)
+        logger.info("Supabase 캐시 클라이언트 초기화 완료")
+    except Exception as e:
+        logger.warning("Supabase 초기화 실패, 파일 캐시 fallback: %s", e)
+        _supabase_init_failed = True
+        _supabase_client = None
+    return _supabase_client
 
 # Gemini 호출 간격 제한 (동시 요청 방어)
 _gemini_lock = asyncio.Lock()
@@ -112,24 +137,53 @@ def _cache_key(course: dict, mobility_types: list[str]) -> str:
     return hashlib.md5(f"{spot_ids}:{types_str}".encode()).hexdigest()
 
 
-def _load_cache(key: str) -> dict | None:
+def _load_cache_file(key: str) -> dict | None:
     path = _CACHE_DIR / f"{key}.json"
     if path.exists():
         try:
             return json.loads(path.read_text(encoding="utf-8"))
         except Exception as e:
-            logger.warning("AI 캐시 로드 실패 (%s): %s", key, e)
+            logger.warning("AI 파일 캐시 로드 실패 (%s): %s", key, e)
     return None
 
 
-def _save_cache(key: str, data: dict) -> None:
+def _save_cache_file(key: str, data: dict) -> None:
     try:
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
         (_CACHE_DIR / f"{key}.json").write_text(
             json.dumps(data, ensure_ascii=False), encoding="utf-8"
         )
     except Exception as e:
-        logger.warning("AI 캐시 저장 실패 (%s): %s", key, e)
+        logger.warning("AI 파일 캐시 저장 실패 (%s): %s", key, e)
+
+
+def _load_cache(key: str) -> dict | None:
+    """Supabase 우선, 실패 시 파일 캐시 fallback."""
+    sb = _get_supabase()
+    if sb is not None:
+        try:
+            res = sb.table("ai_cache").select("data").eq("key", key).limit(1).execute()
+            rows = getattr(res, "data", None) or []
+            if rows:
+                logger.info("Supabase 캐시 히트: %s", key)
+                return rows[0]["data"]
+        except Exception as e:
+            logger.warning("Supabase 캐시 조회 실패, 파일 fallback: %s", e)
+    return _load_cache_file(key)
+
+
+def _save_cache(key: str, data: dict) -> None:
+    """Supabase 우선 저장 후 파일 캐시도 함께 기록(이중 안전장치)."""
+    sb = _get_supabase()
+    if sb is not None:
+        try:
+            sb.table("ai_cache").upsert(
+                {"key": key, "data": data}, on_conflict="key"
+            ).execute()
+            logger.info("Supabase 캐시 저장: %s", key)
+        except Exception as e:
+            logger.warning("Supabase 캐시 저장 실패, 파일 fallback: %s", e)
+    _save_cache_file(key, data)
 
 
 def _call_gemini_sync(client, prompt: str) -> str | None:
