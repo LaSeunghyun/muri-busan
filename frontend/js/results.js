@@ -106,7 +106,8 @@ loadWeather();
       const d = c.day || 1;
       dayCounts.set(d, (dayCounts.get(d) || 0) + 1);
     });
-    if (dayCounts.size === 0) {
+    // 1일 이하로 코스가 생성되었으면 탭 숨김 (외로운 Day 탭 방지)
+    if (dayCounts.size <= 1) {
       dayTabBar.style.display = 'none';
       return;
     }
@@ -161,14 +162,16 @@ loadWeather();
   }
 
   function weatherChip(weather) {
-    if (!weather || !weather.available) return '';
+    if (!weather) return '';
+    // available=false여도 sky/tmp가 있으면 표시
     const icon = weather.icon || '⛅';
     const sky = weather.sky || '';
     const tmp = weather.tmp || '';
     const parts = [icon];
     if (sky) parts.push(sky);
     if (tmp) parts.push(tmp);
-    return `<span class="summary-chip summary-chip-weather">${parts.join(' ')}</span>`;
+    if (parts.length === 1) return ''; // 아이콘만 있으면 표시 X
+    return `<span class="summary-chip summary-chip-weather">날씨 ${parts.join(' ')}</span>`;
   }
 
   function renderSummary(courses) {
@@ -426,7 +429,7 @@ loadWeather();
     if (typeof logRecommendationSilent === 'function') {
       logRecommendationSilent(result).catch(() => {});
     }
-    setupSatisfactionBlock();
+    // 만족도 조사는 course.html에서 처리
   }
 
   async function init() {
@@ -452,7 +455,7 @@ loadWeather();
 
     allCourses = stored;
     renderCurrentFilter();
-    setupSatisfactionBlock();
+    // 만족도 조사는 course.html에서 처리
   }
 
   // ── 만족도 조사 블록 ─────────────────────────────────

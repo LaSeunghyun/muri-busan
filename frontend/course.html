@@ -61,7 +61,7 @@
     <!-- 하단 버튼 -->
     <div class="detail-bottom">
       <button class="btn-primary" id="shareAction">일정 카드로 공유하기</button>
-      <button class="btn-outline" onclick="navigateTo('/results.html')">다른 코스 보기</button>
+      <button class="btn-outline" id="backToResults">다른 코스 보기</button>
     </div>
   </div>
 
@@ -88,10 +88,69 @@
       </section>
       <div class="detail-bottom">
         <button class="btn-primary" id="shareActionPc">일정 카드로 공유하기</button>
-        <button class="btn-outline" onclick="navigateTo('/results.html')">다른 코스 보기</button>
+        <button class="btn-outline" id="backToResultsPc">다른 코스 보기</button>
       </div>
     </div>
   </div>
+</div>
+
+<!-- 만족도 조사 모달 (공유/다른 코스 보기 시 노출) -->
+<div class="satisfaction-modal" id="satisfactionModal" hidden aria-modal="true" role="dialog" aria-labelledby="satisfaction-heading">
+  <div class="satisfaction-backdrop" id="satisfactionBackdrop"></div>
+  <section class="satisfaction-section satisfaction-section--modal" id="satisfactionBlock" aria-labelledby="satisfaction-heading">
+    <h2 class="satisfaction-heading" id="satisfaction-heading">이 코스 추천이 도움이 되셨나요?</h2>
+    <p class="satisfaction-subtitle">답해주시면 다음 여행자에게 더 정확한 코스를 드릴 수 있어요.</p>
+    <div class="satisfaction-scale" role="radiogroup" aria-labelledby="satisfaction-heading" id="satisfactionScale">
+      <button type="button" class="satisfaction-btn satisfaction-btn--low" role="radio" aria-checked="false" data-score="1" aria-label="1점 매우 불만">
+        <span class="satisfaction-emoji" aria-hidden="true">😞</span>
+        <span class="satisfaction-num" aria-hidden="true">1</span>
+        <span class="satisfaction-label">매우 불만</span>
+      </button>
+      <button type="button" class="satisfaction-btn satisfaction-btn--low" role="radio" aria-checked="false" data-score="2" aria-label="2점 불만">
+        <span class="satisfaction-emoji" aria-hidden="true">😕</span>
+        <span class="satisfaction-num" aria-hidden="true">2</span>
+        <span class="satisfaction-label">불만</span>
+      </button>
+      <button type="button" class="satisfaction-btn" role="radio" aria-checked="false" data-score="3" aria-label="3점 보통">
+        <span class="satisfaction-emoji" aria-hidden="true">😐</span>
+        <span class="satisfaction-num" aria-hidden="true">3</span>
+        <span class="satisfaction-label">보통</span>
+      </button>
+      <button type="button" class="satisfaction-btn satisfaction-btn--high" role="radio" aria-checked="false" data-score="4" aria-label="4점 만족">
+        <span class="satisfaction-emoji" aria-hidden="true">🙂</span>
+        <span class="satisfaction-num" aria-hidden="true">4</span>
+        <span class="satisfaction-label">만족</span>
+      </button>
+      <button type="button" class="satisfaction-btn satisfaction-btn--high" role="radio" aria-checked="false" data-score="5" aria-label="5점 매우 만족">
+        <span class="satisfaction-emoji" aria-hidden="true">😊</span>
+        <span class="satisfaction-num" aria-hidden="true">5</span>
+        <span class="satisfaction-label">매우 만족</span>
+      </button>
+    </div>
+
+    <div class="satisfaction-reason-panel" id="satisfactionReasonPanel" aria-hidden="true">
+      <p class="satisfaction-reason-guide">어떤 점이 아쉬우셨나요? (복수 선택 가능)</p>
+      <div class="satisfaction-reason-chips" role="group" aria-label="불만 사유 선택" id="satisfactionReasonChips">
+        <button type="button" class="satisfaction-reason-chip" aria-pressed="false" data-reason="접근성 정보 오류">접근성 정보 오류</button>
+        <button type="button" class="satisfaction-reason-chip" aria-pressed="false" data-reason="이동 거리 과다">이동 거리가 너무 많아요</button>
+        <button type="button" class="satisfaction-reason-chip" aria-pressed="false" data-reason="이동 유형 불일치">내 이동 유형과 안 맞아요</button>
+        <button type="button" class="satisfaction-reason-chip" aria-pressed="false" data-reason="관광지 정보 부정확">관광지 정보가 부정확해요</button>
+        <button type="button" class="satisfaction-reason-chip" aria-pressed="false" data-reason="다양성 부족">비슷한 곳만 나와요</button>
+        <button type="button" class="satisfaction-reason-chip" aria-pressed="false" data-reason="일정 배분 이상">일정 배분이 이상해요</button>
+      </div>
+      <textarea class="satisfaction-textarea" id="satisfactionText" rows="3" maxlength="300" placeholder="더 나은 추천을 위해 의견을 남겨주세요 (선택)" aria-label="추가 의견 입력 (선택사항, 최대 300자)"></textarea>
+      <div class="satisfaction-char-count" aria-live="polite"><span id="satisfactionCharCount">0</span>/300</div>
+    </div>
+
+    <div class="satisfaction-actions">
+      <button type="button" class="btn-primary satisfaction-submit" id="satisfactionSubmit" disabled>의견 보내고 계속하기</button>
+      <button type="button" class="satisfaction-skip" id="satisfactionSkip">건너뛰기</button>
+    </div>
+
+    <div class="satisfaction-done" id="satisfactionDone" hidden role="status" aria-live="polite">
+      소중한 의견 감사합니다. 잠시 후 계속 진행합니다.
+    </div>
+  </section>
 </div>
 
 <script src="/runtime-config.js"></script>

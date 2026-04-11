@@ -697,17 +697,164 @@
     });
   }
 
-  // ── 9. 공유 버튼 ─────────────────────────────────────────────────
-  ['shareBtn','shareAction','shareActionPc'].forEach(id => {
-    document.getElementById(id)?.addEventListener('click', async () => {
-      const result = await apiPost('/api/share', { course_id: course.id, course });
-      if (result?.token) {
-        AppState.selected_course = course;
-        localStorage.setItem('mb_share_token', result.token);
-        navigateTo('/share.html?token=' + result.token);
-        return;
+  // ── 9. 공유 버튼 + 만족도 조사 모달 ────────────────────────────────
+  async function performShare() {
+    const result = await apiPost('/api/share', { course_id: course.id, course });
+    if (result?.token) {
+      AppState.selected_course = course;
+      localStorage.setItem('mb_share_token', result.token);
+      navigateTo('/share.html?token=' + result.token);
+      return;
+    }
+    showToast('공유 링크 생성에 실패했습니다.', 'error');
+  }
+
+  function performBackToResults() {
+    navigateTo('/results.html');
+  }
+
+  // 만족도 모달 노출 후 원래 액션 실행
+  function showSatisfactionModal(afterAction) {
+    const modal = document.getElementById('satisfactionModal');
+    if (!modal) { afterAction(); return; }
+
+    // 이미 제출한 경우 바로 패스
+    if (sessionStorage.getItem('mb_survey_done') === '1') {
+      afterAction();
+      return;
+    }
+
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+
+    function cleanup() {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    }
+
+    let selectedScore = 0;
+
+    const scaleEl = document.getElementById('satisfactionScale');
+    const panelEl = document.getElementById('satisfactionReasonPanel');
+    const chipsEl = document.getElementById('satisfactionReasonChips');
+    const textEl = document.getElementById('satisfactionText');
+    const countEl = document.getElementById('satisfactionCharCount');
+    const submitEl = document.getElementById('satisfactionSubmit');
+    const skipEl = document.getElementById('satisfactionSkip');
+    const doneEl = document.getElementById('satisfactionDone');
+    const backdropEl = document.getElementById('satisfactionBackdrop');
+
+    function openReasonPanel(open) {
+      if (!panelEl) return;
+      if (open) {
+        panelEl.classList.add('open');
+        panelEl.setAttribute('aria-hidden', 'false');
+      } else {
+        panelEl.classList.remove('open');
+        panelEl.setAttribute('aria-hidden', 'true');
       }
-      showToast('공유 링크 생성에 실패했습니다.', 'error');
+    }
+
+    // 점수 버튼 핸들러 (1회 바인딩, 반복 대응 위해 중복 체크)
+    if (!scaleEl.dataset.bound) {
+      scaleEl.dataset.bound = '1';
+      scaleEl.querySelectorAll('.satisfaction-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const score = parseInt(this.dataset.score, 10);
+          selectedScore = score;
+          scaleEl.querySelectorAll('.satisfaction-btn').forEach(b => {
+            b.setAttribute('aria-checked', b === this ? 'true' : 'false');
+          });
+          submitEl.disabled = false;
+          openReasonPanel(score <= 2);
+        });
+      });
+    }
+
+    if (chipsEl && !chipsEl.dataset.bound) {
+      chipsEl.dataset.bound = '1';
+      chipsEl.querySelectorAll('.satisfaction-reason-chip').forEach(chip => {
+        chip.addEventListener('click', function () {
+          const pressed = this.getAttribute('aria-pressed') === 'true';
+          this.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+        });
+      });
+    }
+
+    if (textEl && countEl && !textEl.dataset.bound) {
+      textEl.dataset.bound = '1';
+      textEl.addEventListener('input', function () {
+        countEl.textContent = String(this.value.length);
+      });
+    }
+
+    // 제출
+    const submitHandler = async () => {
+      if (!selectedScore) return;
+      submitEl.disabled = true;
+      const selectedReasons = chipsEl
+        ? Array.from(chipsEl.querySelectorAll('.satisfaction-reason-chip[aria-pressed="true"]'))
+            .map(c => c.dataset.reason)
+        : [];
+      const text = textEl ? textEl.value.trim() : '';
+      const res = typeof submitSatisfactionSurvey === 'function'
+        ? await submitSatisfactionSurvey(selectedScore, selectedReasons, text)
+        : { ok: false };
+      if (res && res.ok) {
+        sessionStorage.setItem('mb_survey_done', '1');
+        if (scaleEl) scaleEl.style.display = 'none';
+        openReasonPanel(false);
+        const actionsEl = modal.querySelector('.satisfaction-actions');
+        if (actionsEl) actionsEl.style.display = 'none';
+        if (doneEl) doneEl.hidden = false;
+        // 1.5초 후 원래 액션 실행
+        setTimeout(() => {
+          cleanup();
+          afterAction();
+        }, 1500);
+      } else {
+        submitEl.disabled = false;
+        showToast('의견 저장에 실패했어요. 잠시 후 다시 시도해주세요.', 'error');
+      }
+    };
+
+    // 스킵 핸들러
+    const skipHandler = () => {
+      sessionStorage.setItem('mb_survey_done', '1');
+      cleanup();
+      afterAction();
+    };
+
+    // 백드롭 클릭 = 스킵
+    const backdropHandler = () => skipHandler();
+
+    // 중복 바인딩 방지를 위해 매번 교체
+    const newSubmit = submitEl.cloneNode(true);
+    submitEl.parentNode.replaceChild(newSubmit, submitEl);
+    newSubmit.addEventListener('click', submitHandler);
+
+    const newSkip = skipEl.cloneNode(true);
+    skipEl.parentNode.replaceChild(newSkip, skipEl);
+    newSkip.addEventListener('click', skipHandler);
+
+    if (backdropEl) {
+      const newBackdrop = backdropEl.cloneNode(true);
+      backdropEl.parentNode.replaceChild(newBackdrop, backdropEl);
+      newBackdrop.addEventListener('click', backdropHandler);
+    }
+  }
+
+  // 공유 버튼에 만족도 조사 래핑
+  ['shareBtn','shareAction','shareActionPc'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', () => {
+      showSatisfactionModal(() => performShare());
+    });
+  });
+
+  // "다른 코스 보기" 버튼에도 만족도 조사 래핑
+  ['backToResults','backToResultsPc'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', () => {
+      showSatisfactionModal(() => performBackToResults());
     });
   });
 })();

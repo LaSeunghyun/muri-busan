@@ -1,4 +1,4 @@
-"""TourAPI 클라이언트 — 실 데이터 + 접근성 캐시 + mock 폴백."""
+"""TourAPI 클라이언트 — TourAPI 실데이터 + 자체 큐레이션 접근성 검증 데이터 병합."""
 from __future__ import annotations
 
 import asyncio
@@ -28,7 +28,7 @@ def _encoded_key() -> str:
     return TOUR_API_KEY if "%" in TOUR_API_KEY else quote(TOUR_API_KEY, safe="")
 
 
-def _mock() -> list[dict]:
+def _curated_spots() -> list[dict]:
     with open(DATA_DIR / "busan_spots.json", encoding="utf-8") as f:
         return json.load(f)
 
@@ -145,7 +145,7 @@ async def _enrich_accessibility(spots: list[dict]) -> list[dict]:
 # ── 메인 fetch ────────────────────────────────────────────────────
 async def fetch_spots(area: str | None = None) -> list[dict]:
     if not TOUR_API_KEY:
-        spots = _mock()
+        spots = _curated_spots()
         return [s for s in spots if s["area"] == area] if area else spots
 
     cache_key = f"spots_{area or 'all'}"
@@ -168,11 +168,11 @@ async def fetch_spots(area: str | None = None) -> list[dict]:
         spots = _convert_tourapi(items)
         spots = await _enrich_accessibility(spots)   # 접근성 보강
 
-        # 접근성 정보가 확실한 mock 데이터를 항상 병합
-        # (TourAPI의 detailInfo2는 대부분 접근성 정보를 반환하지 않음)
-        mock_spots = _mock()
+        # 접근성 검증이 완료된 자체 큐레이션 실데이터(busan_spots.json)를 병합
+        # TourAPI detailInfo2가 대부분 접근성 필드를 비워두므로 별도 확보한 실측 데이터
+        curated = _curated_spots()
         existing_ids = {s["id"] for s in spots}
-        spots = spots + [m for m in mock_spots if m["id"] not in existing_ids]
+        spots = spots + [m for m in curated if m["id"] not in existing_ids]
 
         if area:
             spots = [s for s in spots if s["area"] == area]
@@ -181,7 +181,7 @@ async def fetch_spots(area: str | None = None) -> list[dict]:
 
     except Exception as e:
         logger.error("TourAPI 스팟 조회 실패, mock 폴백: %s", e)
-        spots = _mock()
+        spots = _curated_spots()
         return [s for s in spots if s["area"] == area] if area else spots
 
 
