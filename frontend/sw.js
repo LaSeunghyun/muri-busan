@@ -1,4 +1,4 @@
-const CACHE_NAME = 'muriopbs-v3';
+const CACHE_NAME = 'muriopbs-v4';
 const STATIC = ['/', '/onboarding.html', '/results.html', '/course.html', '/share.html', '/offline.html', '/css/style.css', '/js/app.js', '/js/onboarding.js', '/js/results.js', '/js/course.js', '/js/share.js', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -28,8 +28,21 @@ self.addEventListener('fetch', e => {
         return new Response('{"error":"offline"}', { headers: {'Content-Type':'application/json'} });
       })
     );
+  } else if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.html')) {
+    // Network First for JS/CSS/HTML — 배포 즉시 반영, 오프라인 시 캐시 폴백
+    e.respondWith(
+      fetch(e.request).then(r => {
+        const clone = r.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+        return r;
+      }).catch(() => caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        if (e.request.mode === 'navigate') return caches.match('/offline.html');
+        return new Response('', { status: 408 });
+      }))
+    );
   } else {
-    // Cache First for static, offline.html fallback for navigation
+    // Cache First for other static (icons, images, manifest)
     e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request).then(r => {
       const clone = r.clone();
       caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
