@@ -422,6 +422,11 @@ loadWeather();
     allCourses = result.courses;
     renderCurrentFilter();
     showToast('추천 결과를 최신 조건으로 다시 분석했어요.', 'success');
+    // 추천 요청 로그 저장 (fire-and-forget, 실패해도 UX 영향 없음)
+    if (typeof logRecommendationSilent === 'function') {
+      logRecommendationSilent(result).catch(() => {});
+    }
+    setupSatisfactionBlock();
   }
 
   async function init() {
@@ -447,6 +452,110 @@ loadWeather();
 
     allCourses = stored;
     renderCurrentFilter();
+    setupSatisfactionBlock();
+  }
+
+  // ── 만족도 조사 블록 ─────────────────────────────────
+  function setupSatisfactionBlock() {
+    const block = document.getElementById('satisfactionBlock');
+    if (!block || !allCourses.length) return;
+    // 이미 제출한 세션이면 노출 금지
+    if (sessionStorage.getItem('mb_survey_done') === '1') {
+      block.hidden = true;
+      return;
+    }
+    // 초기화 (이미 바인딩된 경우 중복 방지)
+    if (block.dataset.bound === '1') {
+      block.hidden = false;
+      return;
+    }
+    block.dataset.bound = '1';
+    block.hidden = false;
+
+    const scaleEl = document.getElementById('satisfactionScale');
+    const panelEl = document.getElementById('satisfactionReasonPanel');
+    const chipsEl = document.getElementById('satisfactionReasonChips');
+    const textEl = document.getElementById('satisfactionText');
+    const countEl = document.getElementById('satisfactionCharCount');
+    const submitEl = document.getElementById('satisfactionSubmit');
+    const skipEl = document.getElementById('satisfactionSkip');
+    const doneEl = document.getElementById('satisfactionDone');
+
+    let selectedScore = 0;
+
+    function openReasonPanel(open) {
+      if (!panelEl) return;
+      if (open) {
+        panelEl.classList.add('open');
+        panelEl.setAttribute('aria-hidden', 'false');
+      } else {
+        panelEl.classList.remove('open');
+        panelEl.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    if (scaleEl) {
+      scaleEl.querySelectorAll('.satisfaction-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const score = parseInt(this.dataset.score, 10);
+          selectedScore = score;
+          scaleEl.querySelectorAll('.satisfaction-btn').forEach(b => {
+            b.setAttribute('aria-checked', b === this ? 'true' : 'false');
+          });
+          if (submitEl) submitEl.disabled = false;
+          openReasonPanel(score <= 2);
+        });
+      });
+    }
+
+    if (chipsEl) {
+      chipsEl.querySelectorAll('.satisfaction-reason-chip').forEach(chip => {
+        chip.addEventListener('click', function () {
+          const pressed = this.getAttribute('aria-pressed') === 'true';
+          this.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+        });
+      });
+    }
+
+    if (textEl && countEl) {
+      textEl.addEventListener('input', function () {
+        countEl.textContent = String(this.value.length);
+      });
+    }
+
+    if (submitEl) {
+      submitEl.addEventListener('click', async function () {
+        if (!selectedScore) return;
+        submitEl.disabled = true;
+        const selectedReasons = chipsEl
+          ? Array.from(chipsEl.querySelectorAll('.satisfaction-reason-chip[aria-pressed="true"]'))
+              .map(c => c.dataset.reason)
+          : [];
+        const text = textEl ? textEl.value.trim() : '';
+        const res = typeof submitSatisfactionSurvey === 'function'
+          ? await submitSatisfactionSurvey(selectedScore, selectedReasons, text)
+          : { ok: false };
+        if (res && res.ok) {
+          sessionStorage.setItem('mb_survey_done', '1');
+          if (scaleEl) scaleEl.style.display = 'none';
+          openReasonPanel(false);
+          if (document.querySelector('.satisfaction-actions')) {
+            document.querySelector('.satisfaction-actions').style.display = 'none';
+          }
+          if (doneEl) doneEl.hidden = false;
+        } else {
+          submitEl.disabled = false;
+          showToast('의견 저장에 실패했어요. 잠시 후 다시 시도해주세요.', 'error');
+        }
+      });
+    }
+
+    if (skipEl) {
+      skipEl.addEventListener('click', function () {
+        sessionStorage.setItem('mb_survey_done', '1');
+        block.hidden = true;
+      });
+    }
   }
 
   if (filterTabs) {

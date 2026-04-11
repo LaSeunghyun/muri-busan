@@ -743,6 +743,215 @@ button { font-family: inherit; }
 
 .result-list { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 
+/* ── 만족도 조사 섹션 ── */
+.satisfaction-section {
+  margin: 8px 16px 32px;
+  padding: 24px 20px;
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  box-shadow: 0 4px 16px rgba(0, 48, 135, 0.06);
+  animation: fadeUp 0.6s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.satisfaction-heading {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--gray-900, #1a1a1a);
+  text-align: center;
+  margin: 0 0 6px;
+}
+.satisfaction-subtitle {
+  font-size: 12px;
+  color: var(--gray-500, #888);
+  text-align: center;
+  margin: 0 0 18px;
+}
+.satisfaction-scale {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.satisfaction-btn {
+  flex: 1;
+  max-width: 80px;
+  min-width: 56px;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border: 2px solid var(--gray-200, #e5e5e5);
+  border-radius: 14px;
+  background: var(--white);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.satisfaction-btn:hover:not([aria-checked="true"]) {
+  border-color: var(--primary, #003087);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 48, 135, 0.12);
+}
+.satisfaction-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+.satisfaction-num {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--gray-700, #555);
+  line-height: 1;
+}
+.satisfaction-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray-500, #888);
+  white-space: nowrap;
+}
+.satisfaction-btn[aria-checked="true"] {
+  border-color: var(--primary, #003087);
+  background: #eef2ff;
+  box-shadow: 0 4px 12px rgba(0, 48, 135, 0.18);
+}
+.satisfaction-btn[aria-checked="true"] .satisfaction-num,
+.satisfaction-btn[aria-checked="true"] .satisfaction-label {
+  color: var(--primary, #003087);
+}
+.satisfaction-btn--low[aria-checked="true"] {
+  border-color: #dc3545;
+  background: #fff5f5;
+}
+.satisfaction-btn--low[aria-checked="true"] .satisfaction-num,
+.satisfaction-btn--low[aria-checked="true"] .satisfaction-label {
+  color: #dc3545;
+}
+.satisfaction-btn--high[aria-checked="true"] {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+.satisfaction-btn--high[aria-checked="true"] .satisfaction-num,
+.satisfaction-btn--high[aria-checked="true"] .satisfaction-label {
+  color: #16a34a;
+}
+
+/* 사유 패널 아코디언 */
+.satisfaction-reason-panel {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.4s ease, opacity 0.3s ease, margin-top 0.3s ease;
+}
+.satisfaction-reason-panel.open {
+  max-height: 500px;
+  opacity: 1;
+  margin-top: 20px;
+}
+.satisfaction-reason-guide {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700, #555);
+  margin: 0 0 10px;
+}
+.satisfaction-reason-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.satisfaction-reason-chip {
+  padding: 10px 14px;
+  min-height: 40px;
+  border-radius: 999px;
+  background: var(--gray-50, #f7f7f7);
+  border: 1.5px solid var(--gray-200, #e5e5e5);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700, #555);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.satisfaction-reason-chip:hover:not([aria-pressed="true"]) {
+  border-color: var(--primary, #003087);
+  color: var(--primary, #003087);
+}
+.satisfaction-reason-chip[aria-pressed="true"] {
+  background: #eef2ff;
+  border-color: var(--primary, #003087);
+  color: var(--primary, #003087);
+}
+.satisfaction-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-200, #e5e5e5);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--gray-900, #1a1a1a);
+  line-height: 1.5;
+  resize: none;
+  background: var(--white);
+  box-sizing: border-box;
+}
+.satisfaction-textarea:focus {
+  outline: none;
+  border-color: var(--primary, #003087);
+  box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.12);
+}
+.satisfaction-char-count {
+  font-size: 11px;
+  color: var(--gray-400, #aaa);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.satisfaction-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+}
+.satisfaction-submit {
+  width: 100%;
+  min-height: 48px;
+}
+.satisfaction-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.satisfaction-skip {
+  width: 100%;
+  min-height: 40px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--gray-400, #aaa);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.satisfaction-skip:hover {
+  color: var(--gray-600, #666);
+}
+.satisfaction-done {
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #16a34a;
+  background: #f0fdf4;
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
+}
+
 /* ── 코스 카드 (스태거 애니메이션) ── */
 .course-card {
   background: var(--white);

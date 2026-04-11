@@ -8,7 +8,22 @@ function _lsGet(key, fallback) {
   catch { localStorage.removeItem(key); return fallback; }
 }
 
+function _ensureSessionId() {
+  let sid = localStorage.getItem('mb_session_id');
+  if (!sid) {
+    try {
+      sid = (crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : ('s-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10));
+    } catch {
+      sid = 's-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+    }
+    localStorage.setItem('mb_session_id', sid);
+  }
+  return sid;
+}
+
 const AppState = {
+  get session_id() { return _ensureSessionId(); },
   get mobility_types() { return _lsGet('mb_types', []); },
   set mobility_types(v) { localStorage.setItem('mb_types', JSON.stringify(v)); },
   get days() {
@@ -25,8 +40,10 @@ const AppState = {
   set recommendation_meta(v) { localStorage.setItem('mb_recommendation_meta', JSON.stringify(v)); },
   get selected_course() { return _lsGet('mb_selected', null); },
   set selected_course(v) { localStorage.setItem('mb_selected', JSON.stringify(v)); },
+  get log_id() { return localStorage.getItem('mb_log_id') || null; },
+  set log_id(v) { v ? localStorage.setItem('mb_log_id', v) : localStorage.removeItem('mb_log_id'); },
   clear() {
-    ['mb_types', 'mb_days', 'mb_start_date', 'mb_areas', 'mb_courses', 'mb_recommendation_meta', 'mb_selected', 'mb_share_token'].forEach(k =>
+    ['mb_types', 'mb_days', 'mb_start_date', 'mb_areas', 'mb_courses', 'mb_recommendation_meta', 'mb_selected', 'mb_share_token', 'mb_log_id'].forEach(k =>
       localStorage.removeItem(k)
     );
   }
@@ -90,6 +107,57 @@ async function requestRecommendations(payload = buildRecommendationPayload()) {
     return storeRecommendationResult(result);
   }
   return result;
+}
+
+/* ── 분석/로깅 (fire-and-forget, 실패해도 UX 영향 없음) ── */
+async function logRecommendationSilent(result) {
+  try {
+    const courses = (result && result.courses) || [];
+    const summary = (result && result.summary) || {};
+    const body = {
+      session_id: AppState.session_id,
+      days: parseInt(AppState.days, 10) || 1,
+      mobility_types: AppState.mobility_types,
+      areas: AppState.areas,
+      start_date: AppState.start_date || null,
+      course_ids: courses.map(c => c.id).filter(Boolean),
+      course_count: courses.length,
+      fallback_used: !!summary.fallback_used,
+      ai_enabled: !!summary.ai_enabled,
+    };
+    const resp = await fetch('/api/log/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (data && data.log_id) AppState.log_id = data.log_id;
+    return data;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function submitSatisfactionSurvey(score, reasonCategories, reasonText) {
+  try {
+    const body = {
+      session_id: AppState.session_id,
+      log_id: AppState.log_id || null,
+      score: parseInt(score, 10),
+      reason_categories: reasonCategories || [],
+      reason_text: (reasonText || '').trim() || null,
+    };
+    const resp = await fetch('/api/log/survey', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return await resp.json();
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 }
 
 /* ── 토스트 알림 ── */

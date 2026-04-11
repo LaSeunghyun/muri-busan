@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from backend.routers import courses, recommend, report, search, share, weather
+from backend.routers import analytics, courses, recommend, report, search, share, weather
 
 
 @asynccontextmanager
@@ -64,6 +64,8 @@ app.add_middleware(
 _RATE_LIMITS: dict[str, tuple[int, int]] = {
     "/api/recommend": (10, 60),   # IP당 분당 10회
     "/api/share": (20, 60),       # IP당 분당 20회 (POST만)
+    "/api/log/recommend": (30, 60),  # IP당 분당 30회
+    "/api/log/survey": (10, 60),     # IP당 분당 10회 (같은 세션이 여러번 제출 방지)
 }
 _rate_buckets: dict[str, list[float]] = defaultdict(list)
 
@@ -101,6 +103,7 @@ app.include_router(share.router)
 app.include_router(weather.router)
 app.include_router(search.router)
 app.include_router(report.router)
+app.include_router(analytics.router)
 
 
 
