@@ -22,6 +22,7 @@ ACCESS_CACHE_TTL = 86400  # 24시간
 _spots_cache: dict = {}
 _access_cache: dict = {}   # contentid → {wheelchair, elevator, restroom, stroller}
 SPOTS_CACHE_TTL = 3600
+_curated_cache: list[dict] | None = None
 
 
 def _encoded_key() -> str:
@@ -29,8 +30,11 @@ def _encoded_key() -> str:
 
 
 def _curated_spots() -> list[dict]:
-    with open(DATA_DIR / "busan_spots.json", encoding="utf-8") as f:
-        return json.load(f)
+    global _curated_cache
+    if _curated_cache is None:
+        with open(DATA_DIR / "busan_spots.json", encoding="utf-8") as f:
+            _curated_cache = json.load(f)
+    return _curated_cache
 
 
 # ── 접근성 캐시 로드/저장 ─────────────────────────────────────────
@@ -120,13 +124,16 @@ async def _enrich_accessibility(spots: list[dict]) -> list[dict]:
         if s["id"].startswith("tour_") and s["id"].replace("tour_", "") not in _access_cache
     ]
 
+    BATCH = 50
     if missing_ids:
         async with httpx.AsyncClient() as client:
-            tasks = [_fetch_detail_info(client, cid) for cid in missing_ids[:50]]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            for cid, res in zip(missing_ids[:50], results):
-                if isinstance(res, dict):
-                    _access_cache[cid] = res
+            for i in range(0, len(missing_ids), BATCH):
+                batch = missing_ids[i:i + BATCH]
+                tasks = [_fetch_detail_info(client, cid) for cid in batch]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                for cid, res in zip(batch, results):
+                    if isinstance(res, dict):
+                        _access_cache[cid] = res
         _save_access_cache()
 
     # 스팟 데이터에 병합
@@ -198,7 +205,6 @@ def _convert_tourapi(items: list[dict]) -> list[dict]:
             "lng": float(item.get("mapx", 129.0756)),
             "category": "관광지",
             "visit_time_min": 50,
-            "distance_from_prev_m": 1500,
             "slope_pct": 2.0,
             "wait_time_min": 5,
             "wheelchair_accessible": None,   # None=미확인, True=가능, False=불가

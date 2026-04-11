@@ -259,7 +259,5 @@ async def enrich_courses(
         return courses
 
     # primary 코스만 AI 보강 (각 day의 첫 번째), 나머지는 동일 호출 방지
-    enriched = []
-    for course in courses:
-        enriched.append(await _enrich_single(client, course, mobility_types, days))
-    return enriched
+    tasks = [_enrich_single(client, c, mobility_types, days) for c in courses]
+    return list(await asyncio.gather(*tasks))

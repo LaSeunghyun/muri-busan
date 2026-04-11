@@ -1,6 +1,6 @@
 """GET /api/weather — 부산 현재 날씨 (기상청 단기예보)"""
 from __future__ import annotations
-import os, datetime, logging, httpx
+import asyncio, os, datetime, logging, httpx
 from urllib.parse import quote
 from fastapi import APIRouter
 
@@ -28,20 +28,21 @@ async def _call_weather_api(base_date: str, base_time: str) -> list:
 
 
 async def _fetch_with_fallback() -> list:
-    """여러 base_date/base_time 조합으로 재시도. 첫 성공한 데이터 반환."""
+    """여러 base_date/base_time 조합을 병렬 호출. 첫 성공한 데이터 반환."""
     now = datetime.datetime.now()
-    candidates = []
-    # 오늘 가장 가까운 base_time
-    candidates.append((now, _nearest_base_time(now)))
-    # 어제 23:00 (항상 사용 가능)
     yesterday = now - datetime.timedelta(days=1)
-    candidates.append((yesterday, "2300"))
-    # 어제 20:00
-    candidates.append((yesterday, "2000"))
-    for dt, base_time in candidates:
-        items = await _call_weather_api(dt.strftime("%Y%m%d"), base_time)
-        if items:
-            return items
+    candidates = [
+        (now, _nearest_base_time(now)),
+        (yesterday, "2300"),
+        (yesterday, "2000"),
+    ]
+    results = await asyncio.gather(
+        *[_call_weather_api(dt.strftime("%Y%m%d"), bt) for dt, bt in candidates],
+        return_exceptions=True,
+    )
+    for r in results:
+        if isinstance(r, list) and r:
+            return r
     return []
 
 

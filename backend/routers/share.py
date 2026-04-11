@@ -49,10 +49,28 @@ def init_share_db() -> None:
             conn.execute(
                 "UPDATE shares SET expires_at = datetime(created_at, '+24 hours') WHERE expires_at IS NULL"
             )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_shares_expires ON shares(expires_at)")
         conn.commit()
     finally:
         conn.close()
     logger.info("share DB 초기화 완료: %s", _DB_PATH)
+
+
+def cleanup_expired_shares() -> int:
+    """만료된 공유 링크를 DB에서 삭제하고 삭제된 행 수를 반환한다."""
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            "DELETE FROM shares WHERE expires_at < ?",
+            (datetime.now(timezone.utc).isoformat(),),
+        )
+        conn.commit()
+        deleted = cur.rowcount
+        if deleted:
+            logger.info("만료 공유 링크 %d건 삭제", deleted)
+        return deleted
+    finally:
+        conn.close()
 
 
 class ShareRequest(BaseModel):
@@ -118,6 +136,7 @@ async def get_share(token: str):
             if datetime.now(timezone.utc) > expires_at:
                 raise HTTPException(status_code=410, detail="공유 링크가 만료되었습니다. (24시간 경과)")
         except (ValueError, TypeError):
-            pass  # 파싱 실패 시 만료 체크 건너뜀
+            # 파싱 실패한 expires_at은 보수적으로 만료 처리
+            raise HTTPException(status_code=410, detail="공유 링크가 만료되었습니다.")
 
     return json.loads(row[0])

@@ -164,6 +164,7 @@ def _build_day_course(
     total_days: int,
     alt_idx: int,
     is_rainy: bool = False,
+    dist_matrix: dict[tuple[str, str], float] | None = None,
 ) -> dict[str, Any] | None:
     """단일 시작점에서 그리디로 하루 코스를 구성한다."""
     day_spots: list[dict] = [start]
@@ -182,7 +183,10 @@ def _build_day_course(
         has_senior = "senior" in mobility_types
         ranked = []
         for spot in candidates:
-            dist_m = _distance_between(current, spot)
+            key = (current["id"], spot["id"])
+            dist_m = dist_matrix.get(key) if dist_matrix else None
+            if dist_m is None:
+                dist_m = _distance_between(current, spot)
             leg = _estimate_leg(dist_m, mobility_types)
             seg_fatigue = calc_fatigue(leg["recommended_distance_m"], spot["slope_pct"], spot["wait_time_min"], weights)
             seg_time = leg["recommended_time_min"] + spot["visit_time_min"]
@@ -291,6 +295,14 @@ def recommend_courses(
     # 피로도 오름차순 정렬
     pool = sorted(filtered, key=lambda s: calc_fatigue(0, s["slope_pct"], s["wait_time_min"], weights))
 
+    # 거리 행렬 사전 계산 (O(N²) 중복 제거)
+    dist_matrix: dict[tuple[str, str], float] = {}
+    for i, a in enumerate(pool):
+        for b in pool[i+1:]:
+            d = _distance_between(a, b)
+            dist_matrix[(a["id"], b["id"])] = d
+            dist_matrix[(b["id"], a["id"])] = d
+
     all_courses: list[dict[str, Any]] = []
     global_used_ids: set[str] = set()  # 이전 day에서 이미 사용한 스팟 추적
 
@@ -328,7 +340,7 @@ def recommend_courses(
             if start["area"] in used_start_areas and alt_idx < 2:
                 continue
 
-            course = _build_day_course(start, day_pool, weights, mobility_types, day, days, alt_idx, is_rainy)
+            course = _build_day_course(start, day_pool, weights, mobility_types, day, days, alt_idx, is_rainy, dist_matrix)
             if course and len(course["spots"]) >= 2:
                 all_courses.append(course)
                 used_start_areas.append(start["area"])

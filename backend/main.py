@@ -27,6 +27,7 @@ from backend.routers import analytics, courses, recommend, report, search, share
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     share.init_share_db()
+    share.cleanup_expired_shares()
     report.init_report_db()
     logger.info("앱 시작 완료")
     yield
