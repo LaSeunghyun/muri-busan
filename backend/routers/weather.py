@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 WEATHER_KEY = os.getenv("WEATHER_KEY", "")
 
-async def _call_weather_api(base_date: str, base_time: str) -> dict:
-    """기상청 단기예보 API 호출. 실패 시 None 반환."""
+async def _call_weather_api(base_date: str, base_time: str) -> list:
+    """기상청 단기예보 API 호출. 구조 오류 시 빈 리스트 반환."""
     ek = WEATHER_KEY if "%" in WEATHER_KEY else quote(WEATHER_KEY, safe="")
     url = (
         "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
@@ -20,7 +20,29 @@ async def _call_weather_api(base_date: str, base_time: str) -> dict:
     )
     async with httpx.AsyncClient(timeout=8.0) as c:
         r = await c.get(url)
-        return r.json()["response"]["body"]["items"]["item"]
+        try:
+            data = r.json()
+            return data.get("response", {}).get("body", {}).get("items", {}).get("item", []) or []
+        except Exception:
+            return []
+
+
+async def _fetch_with_fallback() -> list:
+    """여러 base_date/base_time 조합으로 재시도. 첫 성공한 데이터 반환."""
+    now = datetime.datetime.now()
+    candidates = []
+    # 오늘 가장 가까운 base_time
+    candidates.append((now, _nearest_base_time(now)))
+    # 어제 23:00 (항상 사용 가능)
+    yesterday = now - datetime.timedelta(days=1)
+    candidates.append((yesterday, "2300"))
+    # 어제 20:00
+    candidates.append((yesterday, "2000"))
+    for dt, base_time in candidates:
+        items = await _call_weather_api(dt.strftime("%Y%m%d"), base_time)
+        if items:
+            return items
+    return []
 
 
 async def fetch_weather_status(date_str: str | None = None) -> dict:
@@ -32,21 +54,10 @@ async def fetch_weather_status(date_str: str | None = None) -> dict:
     if not WEATHER_KEY:
         return {"available": False, "is_rainy": False}
     try:
-        # 기상청 API는 base_date가 오늘~최대 +3일까지만 지원.
-        # 미래 여행일 요청 시 "오늘 현재 날씨"로 폴백 (데모 목적)
-        now = datetime.datetime.now()
-        if date_str:
-            try:
-                requested = datetime.datetime.strptime(date_str, "%Y%m%d")
-                delta_days = (requested.date() - now.date()).days
-                target = requested if 0 <= delta_days <= 2 else now
-            except Exception:
-                target = now
-        else:
-            target = now
-        base_date = target.strftime("%Y%m%d")
-        base_time = _nearest_base_time(target)
-        items = await _call_weather_api(base_date, base_time)
+        # 기상청 API는 미래일 지원 불가. 항상 현재 기준으로 조회 + 여러 base_time 폴백
+        items = await _fetch_with_fallback()
+        if not items:
+            return {"available": False, "is_rainy": False}
         sky = next((x["fcstValue"] for x in items if x["category"] == "SKY"), "1")
         tmp = next((x["fcstValue"] for x in items if x["category"] == "TMP"), "20")
         pty = next((x["fcstValue"] for x in items if x["category"] == "PTY"), "0")
