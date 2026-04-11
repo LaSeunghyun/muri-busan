@@ -294,18 +294,34 @@ def recommend_courses(
     all_courses: list[dict[str, Any]] = []
     global_used_ids: set[str] = set()  # 이전 day에서 이미 사용한 스팟 추적
 
+    # 멀티데이 요청인데 풀이 너무 작을 때: 스팟 재사용 임계치 계산
+    # 최소 4개 스팟/코스 × days → 이 숫자 미만이면 재사용 허용
+    MIN_SPOTS_PER_DAY = 4
+    reuse_threshold = MIN_SPOTS_PER_DAY * max(1, days)
+
     for day in range(1, days + 1):
-        # 이전 day에서 사용한 스팟을 제외한 풀
-        day_pool = [s for s in pool if s["id"] not in global_used_ids]
+        # 풀이 너무 작으면 재사용 허용 (좁은 권역에서 멀티데이 가능하도록)
+        if len(pool) < reuse_threshold:
+            day_pool = pool  # 전체 풀 재사용
+        else:
+            day_pool = [s for s in pool if s["id"] not in global_used_ids]
+
         if not day_pool:
-            break
+            # 그래도 비면 강제로 전체 풀 사용
+            day_pool = pool
+            if not day_pool:
+                break
 
         # 서로 다른 권역 시작점으로 NUM_ALTERNATIVES개 대안 코스 생성
         used_start_areas: list[str] = []
         alt_idx = 0
         primary_spot_ids: set[str] = set()  # 이 day의 primary 코스 스팟 (다음 day에 제외)
 
-        for start in day_pool:
+        # 재사용 모드에서는 day별로 다른 시작점부터 시작하여 코스를 변화시킴
+        start_offset = (day - 1) * 2 if len(pool) < reuse_threshold else 0
+        ordered_pool = day_pool[start_offset:] + day_pool[:start_offset]
+
+        for start in ordered_pool:
             if alt_idx >= NUM_ALTERNATIVES:
                 break
             # 다른 코스와 다른 시작 권역 선호 (앞 2개는 강제, 나머지는 허용)
@@ -316,8 +332,8 @@ def recommend_courses(
             if course and len(course["spots"]) >= 2:
                 all_courses.append(course)
                 used_start_areas.append(start["area"])
-                # primary 코스(alt_idx==0)의 스팟만 global에서 제외
-                if alt_idx == 0:
+                # primary 코스(alt_idx==0)의 스팟만 global에서 제외 (풀이 충분할 때만)
+                if alt_idx == 0 and len(pool) >= reuse_threshold:
                     primary_spot_ids = {s["id"] for s in course["spots"]}
                 alt_idx += 1
 
