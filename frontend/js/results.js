@@ -5,13 +5,15 @@
 async function loadWeather() {
   const banner = document.getElementById('weatherBanner');
   if (!banner) return;
+  let weather;
   try {
     const data = await apiGet('/api/weather');
     if (data && data.available) {
+      weather = data;
       banner.innerHTML = `<span>${escapeHtml(data.icon)} 부산 현재 날씨 ${escapeHtml(data.sky)} ${escapeHtml(data.tmp)}</span>`;
       banner.style.display = 'flex';
     }
-  } catch {}
+  } catch(e) { weather = { icon: '🌤', desc: '날씨 정보 없음' }; showToast('날씨 정보를 불러올 수 없습니다'); }
 }
 loadWeather();
 
@@ -417,7 +419,7 @@ loadWeather();
   async function rerunRecommendations() {
     showSkeletons();
     const result = await requestRecommendations();
-    if (!result || !Array.isArray(result.courses)) {
+    if (!result?.courses?.length) {
       showRetryError();
       return;
     }
@@ -425,6 +427,9 @@ loadWeather();
     allCourses = result.courses;
     renderCurrentFilter();
     showToast('추천 결과를 최신 조건으로 다시 분석했어요.', 'success');
+    if (result.summary?.fallback_used) {
+      showToast('선택 지역에 코스가 부족해 인근 지역을 포함했어요', 'info');
+    }
     // 추천 요청 로그 저장 (fire-and-forget, 실패해도 UX 영향 없음)
     if (typeof logRecommendationSilent === 'function') {
       logRecommendationSilent(result).catch(() => {});
@@ -455,6 +460,9 @@ loadWeather();
 
     allCourses = stored;
     renderCurrentFilter();
+    if (AppState.recommendation_meta?.fallback_used) {
+      showToast('선택 지역에 코스가 부족해 인근 지역을 포함했어요', 'info');
+    }
     // 만족도 조사는 course.html에서 처리
   }
 

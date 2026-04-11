@@ -2,14 +2,31 @@
  * 무리없이 부산 — 공통 유틸리티 및 상태 관리.
  */
 
-/* ── 상태 관리 (localStorage) ── */
+/* ── 상태 관리 (localStorage + 인메모리 폴백) ── */
+// 개인정보보호 모드 등 localStorage 접근 불가 시 인메모리 객체로 대체
+const _mem = {};
+
+function _lsSet(key, val) {
+  try { localStorage.setItem(key, val); } catch { _mem[key] = val; }
+}
+
+function _lsGetRaw(key) {
+  try { const v = localStorage.getItem(key); return v !== null ? v : (_mem[key] ?? null); }
+  catch { return _mem[key] ?? null; }
+}
+
+function _lsRemove(key) {
+  try { localStorage.removeItem(key); } catch { /* ignore */ }
+  delete _mem[key];
+}
+
 function _lsGet(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
-  catch { localStorage.removeItem(key); return fallback; }
+  try { return JSON.parse(_lsGetRaw(key) || JSON.stringify(fallback)); }
+  catch { _lsRemove(key); return fallback; }
 }
 
 function _ensureSessionId() {
-  let sid = localStorage.getItem('mb_session_id');
+  let sid = _lsGetRaw('mb_session_id');
   if (!sid) {
     try {
       sid = (crypto && crypto.randomUUID) ? crypto.randomUUID()
@@ -17,7 +34,7 @@ function _ensureSessionId() {
     } catch {
       sid = 's-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
     }
-    localStorage.setItem('mb_session_id', sid);
+    _lsSet('mb_session_id', sid);
   }
   return sid;
 }
@@ -25,26 +42,26 @@ function _ensureSessionId() {
 const AppState = {
   get session_id() { return _ensureSessionId(); },
   get mobility_types() { return _lsGet('mb_types', []); },
-  set mobility_types(v) { localStorage.setItem('mb_types', JSON.stringify(v)); },
+  set mobility_types(v) { _lsSet('mb_types', JSON.stringify(v)); },
   get days() {
-    return parseInt(localStorage.getItem('mb_days') || '1', 10);
+    return parseInt(_lsGetRaw('mb_days') || '1', 10);
   },
-  set days(v) { localStorage.setItem('mb_days', String(v)); },
-  get start_date() { return localStorage.getItem('mb_start_date') || ''; },
-  set start_date(v) { localStorage.setItem('mb_start_date', v || ''); },
+  set days(v) { _lsSet('mb_days', String(v)); },
+  get start_date() { return _lsGetRaw('mb_start_date') || ''; },
+  set start_date(v) { _lsSet('mb_start_date', v || ''); },
   get areas() { return _lsGet('mb_areas', []); },
-  set areas(v) { localStorage.setItem('mb_areas', JSON.stringify(v)); },
+  set areas(v) { _lsSet('mb_areas', JSON.stringify(v)); },
   get courses() { return _lsGet('mb_courses', []); },
-  set courses(v) { localStorage.setItem('mb_courses', JSON.stringify(v)); },
+  set courses(v) { _lsSet('mb_courses', JSON.stringify(v)); },
   get recommendation_meta() { return _lsGet('mb_recommendation_meta', null); },
-  set recommendation_meta(v) { localStorage.setItem('mb_recommendation_meta', JSON.stringify(v)); },
+  set recommendation_meta(v) { _lsSet('mb_recommendation_meta', JSON.stringify(v)); },
   get selected_course() { return _lsGet('mb_selected', null); },
-  set selected_course(v) { localStorage.setItem('mb_selected', JSON.stringify(v)); },
-  get log_id() { return localStorage.getItem('mb_log_id') || null; },
-  set log_id(v) { v ? localStorage.setItem('mb_log_id', v) : localStorage.removeItem('mb_log_id'); },
+  set selected_course(v) { _lsSet('mb_selected', JSON.stringify(v)); },
+  get log_id() { return _lsGetRaw('mb_log_id') || null; },
+  set log_id(v) { v ? _lsSet('mb_log_id', v) : _lsRemove('mb_log_id'); },
   clear() {
     ['mb_types', 'mb_days', 'mb_start_date', 'mb_areas', 'mb_courses', 'mb_recommendation_meta', 'mb_selected', 'mb_share_token', 'mb_log_id'].forEach(k =>
-      localStorage.removeItem(k)
+      _lsRemove(k)
     );
   }
 };
@@ -106,7 +123,7 @@ async function requestRecommendations(payload = buildRecommendationPayload()) {
   if (result && Array.isArray(result.courses)) {
     return storeRecommendationResult(result);
   }
-  return result;
+  return null;
 }
 
 /* ── 분석/로깅 (fire-and-forget, 실패해도 UX 영향 없음) ── */
@@ -216,12 +233,12 @@ function renderAccessDots(grade, max = 5) {
 
 /* ── 즐겨찾기 ── */
 const AppFavorites = {
-  get list() { return JSON.parse(localStorage.getItem('mb_favorites') || '[]'); },
+  get list() { return _lsGet('mb_favorites', []); },
   toggle(courseId) {
     const list = this.list;
     const idx = list.indexOf(courseId);
     if (idx === -1) list.push(courseId); else list.splice(idx, 1);
-    localStorage.setItem('mb_favorites', JSON.stringify(list));
+    _lsSet('mb_favorites', JSON.stringify(list));
     return idx === -1;
   },
   has(courseId) { return this.list.includes(courseId); }

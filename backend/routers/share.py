@@ -95,21 +95,32 @@ async def create_share(req: ShareRequest):
         raise HTTPException(status_code=400, detail="공유할 코스 데이터에 id가 필요합니다.")
 
     course_store.put(course_id, course)
-    token = uuid.uuid4().hex[:8]
     expires_at = datetime.now(timezone.utc) + timedelta(hours=_SHARE_TTL_HOURS)
+    token = None
 
     conn = _get_conn()
     try:
-        conn.execute(
-            "INSERT INTO shares (token, course_json, expires_at) VALUES (?, ?, ?)",
-            (token, json.dumps(course, ensure_ascii=False), expires_at.isoformat()),
-        )
-        conn.commit()
+        for _ in range(3):
+            candidate = uuid.uuid4().hex[:16]
+            try:
+                conn.execute(
+                    "INSERT INTO shares (token, course_json, expires_at) VALUES (?, ?, ?)",
+                    (candidate, json.dumps(course, ensure_ascii=False), expires_at.isoformat()),
+                )
+                conn.commit()
+                token = candidate
+                break
+            except sqlite3.IntegrityError:
+                continue
     except Exception as e:
         logger.error("공유 링크 저장 실패: %s", e)
         raise HTTPException(status_code=500, detail="공유 링크 저장에 실패했습니다.")
     finally:
         conn.close()
+
+    if not token:
+        logger.error("공유 토큰 생성 3회 충돌")
+        raise HTTPException(status_code=500, detail="공유 링크 생성에 실패했습니다.")
 
     return {"token": token, "url": f"/share.html?token={token}"}
 

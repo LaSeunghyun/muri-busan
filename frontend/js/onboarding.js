@@ -179,6 +179,8 @@
 
   getAll('step3Next').forEach(function (btn) {
     btn.addEventListener('click', async function () {
+      if (!AppState.days) return showToast('일정을 선택해주세요');
+
       getAll('step3Next').forEach(function (b) {
         b.disabled = true;
         b.textContent = '추천 코스 분석 중...';
@@ -186,14 +188,14 @@
 
       const result = await requestRecommendations();
 
-      if (result && result.courses) {
-        navigateTo('/results.html');
-      } else {
+      if (!result?.courses?.length) {
         getAll('step3Next').forEach(function (b) {
           b.disabled = false;
           b.textContent = '코스 추천받기 →';
         });
         showToast('추천 결과를 가져올 수 없습니다. 다시 시도해주세요.', 'error');
+      } else {
+        navigateTo('/results.html');
       }
     });
   });
