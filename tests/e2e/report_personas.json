@@ -1,6 +1,5 @@
 {
-  "generated_at": "2026-04-11T19:00:19",
-  "test_method": "algorithm-direct (no browser)",
+  "generated_at": "2026-04-11T22:36:34",
   "summary": {
     "total": 50,
     "passed": 50,
@@ -59,10 +58,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 수영",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 13130
     },
     {
       "persona_id": "persona_002",
@@ -75,10 +86,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 10
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 해운대",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6319
     },
     {
       "persona_id": "persona_003",
@@ -91,10 +114,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 1
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 남구",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6151
     },
     {
       "persona_id": "persona_004",
@@ -107,10 +142,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 1
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 기장",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6502
     },
     {
       "persona_id": "persona_005",
@@ -123,10 +170,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 남포",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6232
     },
     {
       "persona_id": "persona_006",
@@ -139,10 +198,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 서구",
+        "결과 페이지 이동",
+        "코스 카드 6개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6804
     },
     {
       "persona_id": "persona_007",
@@ -155,10 +226,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 수영",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6278
     },
     {
       "persona_id": "persona_008",
@@ -171,10 +254,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 1
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 해운대",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6608
     },
     {
       "persona_id": "persona_009",
@@ -187,10 +282,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 남구",
+        "결과 페이지 이동",
+        "코스 카드 9개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6288
     },
     {
       "persona_id": "persona_010",
@@ -203,10 +310,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 5
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 기장",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6549
     },
     {
       "persona_id": "persona_011",
@@ -219,10 +338,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 3
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 남포",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 7132
     },
     {
       "persona_id": "persona_012",
@@ -235,10 +366,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 서구",
+        "결과 페이지 이동",
+        "코스 카드 9개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5905
     },
     {
       "persona_id": "persona_013",
@@ -251,10 +394,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 120.8,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: wheelchair",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 수영",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5885
     },
     {
       "persona_id": "persona_014",
@@ -267,10 +422,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 해운대",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5698
     },
     {
       "persona_id": "persona_015",
@@ -283,10 +450,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 수영",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5330
     },
     {
       "persona_id": "persona_016",
@@ -299,10 +478,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 남포",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5013
     },
     {
       "persona_id": "persona_017",
@@ -315,10 +506,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 9
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 기장",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5109
     },
     {
       "persona_id": "persona_018",
@@ -331,10 +534,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 남구",
+        "결과 페이지 이동",
+        "코스 카드 6개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5031
     },
     {
       "persona_id": "persona_019",
@@ -347,10 +562,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 서구",
+        "결과 페이지 이동",
+        "코스 카드 6개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5844
     },
     {
       "persona_id": "persona_020",
@@ -363,10 +590,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 해운대",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6102
     },
     {
       "persona_id": "persona_021",
@@ -379,10 +618,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 수영",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6101
     },
     {
       "persona_id": "persona_022",
@@ -395,10 +646,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 남포",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6216
     },
     {
       "persona_id": "persona_023",
@@ -411,10 +674,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 기장",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6339
     },
     {
       "persona_id": "persona_024",
@@ -427,10 +702,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 남구",
+        "결과 페이지 이동",
+        "코스 카드 9개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6285
     },
     {
       "persona_id": "persona_025",
@@ -443,10 +730,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 서구",
+        "결과 페이지 이동",
+        "코스 카드 9개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6648
     },
     {
       "persona_id": "persona_026",
@@ -459,10 +758,22 @@
       "expected_course_quality": 4.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 114.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: stroller",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 해운대",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 4.5 >= 4.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6602
     },
     {
       "persona_id": "persona_027",
@@ -475,10 +786,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 1
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 남포",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6225
     },
     {
       "persona_id": "persona_028",
@@ -491,10 +814,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 수영",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6415
     },
     {
       "persona_id": "persona_029",
@@ -507,10 +842,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 1
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 해운대",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 8392
     },
     {
       "persona_id": "persona_030",
@@ -523,10 +870,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 기장",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5528
     },
     {
       "persona_id": "persona_031",
@@ -539,10 +898,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 남구",
+        "결과 페이지 이동",
+        "코스 카드 6개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5367
     },
     {
       "persona_id": "persona_032",
@@ -555,10 +926,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 서구",
+        "결과 페이지 이동",
+        "코스 카드 6개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5322
     },
     {
       "persona_id": "persona_033",
@@ -571,10 +954,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 남포",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5234
     },
     {
       "persona_id": "persona_034",
@@ -587,10 +982,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 수영",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5269
     },
     {
       "persona_id": "persona_035",
@@ -603,10 +1010,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 12
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 해운대",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5144
     },
     {
       "persona_id": "persona_036",
@@ -619,10 +1038,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 4
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 기장",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5135
     },
     {
       "persona_id": "persona_037",
@@ -635,10 +1066,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 남구",
+        "결과 페이지 이동",
+        "코스 카드 9개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6610
     },
     {
       "persona_id": "persona_038",
@@ -651,10 +1094,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 96.7,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: senior",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 서구",
+        "결과 페이지 이동",
+        "코스 카드 9개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6003
     },
     {
       "persona_id": "persona_039",
@@ -667,10 +1122,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 기장",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6170
     },
     {
       "persona_id": "persona_040",
@@ -683,10 +1150,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 서구",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6200
     },
     {
       "persona_id": "persona_041",
@@ -699,10 +1178,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 수영",
+        "결과 페이지 이동",
+        "코스 카드 1개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6492
     },
     {
       "persona_id": "persona_042",
@@ -715,10 +1206,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 1,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 1일",
+        "Step3 진입",
+        "권역 선택: 남구",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6396
     },
     {
       "persona_id": "persona_043",
@@ -731,10 +1234,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 4
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 해운대",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5720
     },
     {
       "persona_id": "persona_044",
@@ -747,10 +1262,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 남포",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 6194
     },
     {
       "persona_id": "persona_045",
@@ -763,10 +1290,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 2
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 기장",
+        "결과 페이지 이동",
+        "코스 카드 2개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 7404
     },
     {
       "persona_id": "persona_046",
@@ -779,10 +1318,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 2,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 2일",
+        "Step3 진입",
+        "권역 선택: 서구",
+        "결과 페이지 이동",
+        "코스 카드 6개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5854
     },
     {
       "persona_id": "persona_047",
@@ -795,10 +1346,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 수영",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 16662
     },
     {
       "persona_id": "persona_048",
@@ -811,10 +1374,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 6
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 남구",
+        "결과 페이지 이동",
+        "코스 카드 9개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5691
     },
     {
       "persona_id": "persona_049",
@@ -827,10 +1402,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 해운대",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5294
     },
     {
       "persona_id": "persona_050",
@@ -843,10 +1430,22 @@
       "expected_course_quality": 3.0,
       "passed": true,
       "failures": [],
-      "courses_count": 3,
-      "first_fatigue": 135.6,
-      "first_acc_avg": 4.0,
-      "duration_ms": 0
+      "warnings": [],
+      "steps_completed": [
+        "온보딩 페이지 진입",
+        "이동약자 유형 선택: carrier",
+        "Step2 진입",
+        "일정 선택: 3일",
+        "Step3 진입",
+        "권역 선택: 남포",
+        "결과 페이지 이동",
+        "코스 카드 3개 렌더링 확인",
+        "접근성 등급 OK: 3.5 >= 3.0",
+        "피로도 OK: 42.0 < 250.0",
+        "코스 상세 페이지 진입",
+        "코스 상세 렌더링 OK (타임라인 엘리먼트 2개)"
+      ],
+      "duration_ms": 5363
     }
   ]
 }

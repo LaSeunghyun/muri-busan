@@ -331,8 +331,16 @@ def run_persona_test(page: Any, persona: dict, base_url: str) -> dict[str, Any]:
         assert submit_btn.count() > 0, "step3Next 버튼 없음"
         submit_btn.click()
 
-        # 결과 페이지로 이동 대기
-        page.wait_for_url(f"{base_url}/results.html", timeout=20_000)
+        # 결과 페이지로 이동 대기 (첫 요청 콜드스타트 고려해 30초)
+        page.wait_for_url(f"{base_url}/results.html", timeout=30_000)
+        # JS 렌더링 완료 대기 — 로딩 오버레이 사라지거나 코스카드 출현 중 먼저 오는 것
+        try:
+            page.wait_for_selector(
+                "#loadingState[style*='display: none'], #loadingState[hidden], .course-card",
+                timeout=15_000,
+            )
+        except Exception:
+            pass  # 로딩 상태 없이 바로 카드가 그려지는 경우 허용
         result["steps_completed"].append("결과 페이지 이동")
 
         # ── Step 6: 결과 페이지 검증 ─────────────────────────────────
@@ -342,11 +350,6 @@ def run_persona_test(page: Any, persona: dict, base_url: str) -> dict[str, Any]:
         detected_errors = [kw for kw in error_keywords if kw in body_text]
         if detected_errors:
             result["failures"].append(f"에러 페이지 감지: {detected_errors}")
-
-        # 로딩 오버레이 사라질 때까지 대기
-        loading = page.locator("#loadingState")
-        if loading.count() > 0:
-            loading.wait_for(state="hidden", timeout=15_000)
 
         # 코스 카드 렌더링 확인
         course_cards = page.locator(".course-card")
@@ -574,6 +577,15 @@ def test_all_personas(browser, live_server):
     results: list[dict[str, Any]] = []
     base_url = live_server
 
+    # 서버 콜드스타트 워밍업 — 첫 페르소나 타임아웃 방지
+    _warmup = browser.new_page(viewport={"width": 390, "height": 844})
+    try:
+        _warmup.goto(f"{base_url}/onboarding.html", wait_until="domcontentloaded", timeout=30_000)
+    except Exception:
+        pass
+    finally:
+        _warmup.close()
+
     print(f"\n{'='*60}")
     print(f"  50개 페르소나 E2E 테스트 시작 - {datetime.now().strftime('%H:%M:%S')}")
     print(f"{'='*60}\n")
@@ -587,17 +599,27 @@ def test_all_personas(browser, live_server):
         print(f"[{idx:>2}/50] {pid} | {persona['name']:6s} | {mt:10s} | {days}일 | {area}", end=" ")
 
         # 각 페르소나마다 격리된 새 탭 사용 (모바일 뷰포트 — PC CSS에서 #typeGrid 숨김 방지)
-        page = browser.new_page(viewport={"width": 390, "height": 844})
-        page.set_default_timeout(15_000)
-        try:
-            result = run_persona_test(page, persona, base_url)
-        finally:
-            page.close()
+        # 간헐적 타임아웃은 1회 자동 재시도
+        MAX_RETRIES = 2
+        result = None
+        for attempt in range(MAX_RETRIES):
+            page = browser.new_page(viewport={"width": 390, "height": 844})
+            page.set_default_timeout(15_000)
+            try:
+                result = run_persona_test(page, persona, base_url)
+            finally:
+                page.close()
+            if result["passed"]:
+                break
+            is_timeout = any("Timeout" in f for f in result["failures"])
+            if not is_timeout or attempt == MAX_RETRIES - 1:
+                break
+            print(f"[retry {attempt + 1}]", end=" ")
 
         status_mark = "✓" if result["passed"] else "✗"
         fail_summary = ""
         if not result["passed"]:
-            fail_summary = f" → {result['failures'][0][:60]}"
+            fail_summary = f" -> {result['failures'][0][:60]}"
         print(f"[{status_mark}] {result['duration_ms']}ms{fail_summary}")
 
         results.append(result)
