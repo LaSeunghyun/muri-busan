@@ -11,7 +11,36 @@
   <div style="font-size:64px;margin-bottom:24px">📡</div>
   <h1 style="font-size:22px;font-weight:700;color:var(--gray-900);margin-bottom:12px">인터넷 연결을 확인해주세요</h1>
   <p style="color:var(--gray-500);margin-bottom:32px;line-height:1.7">오프라인 상태에서는 저장된 코스만 볼 수 있어요.<br>연결이 복구되면 자동으로 재개됩니다.</p>
-  <button class="btn-primary" style="width:auto;padding:0 32px" onclick="location.reload()">다시 시도</button>
+  <button id="retryBtn" class="btn-primary" style="width:auto;padding:0 32px">다시 시도</button>
+  <p id="offlineMsg" style="margin-top:12px;color:var(--gray-500);display:none">아직 연결 중...</p>
 </div>
+<script>
+(function () {
+  var btn = document.getElementById('retryBtn');
+  var msg = document.getElementById('offlineMsg');
+
+  function setOffline() {
+    btn.disabled = true;
+    msg.style.display = '';
+  }
+  function setOnline() {
+    btn.disabled = false;
+    msg.style.display = 'none';
+  }
+
+  btn.addEventListener('click', function () {
+    if (navigator.onLine) {
+      location.reload();
+    } else {
+      setOffline();
+    }
+  });
+
+  window.addEventListener('online', function () { location.reload(); });
+  window.addEventListener('offline', setOffline);
+
+  if (!navigator.onLine) setOffline();
+})();
+</script>
 </body>
 </html>

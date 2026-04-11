@@ -569,14 +569,12 @@ loadWeather();
     }
   }
 
-  if (filterTabs) {
-    filterTabs.addEventListener('click', function (e) {
-      const tab = e.target.closest('.filter-tab');
-      if (!tab) return;
-      activeFilter = tab.dataset.filter;
-      renderCurrentFilter();
-    });
-  }
+  document.addEventListener('click', function (e) {
+    const tab = e.target.closest('[data-filter]');
+    if (!tab) return;
+    activeFilter = tab.dataset.filter;
+    renderCurrentFilter();
+  });
 
   init();
 })();
