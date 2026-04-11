@@ -32,7 +32,7 @@
 <div class="page-wrapper" role="main" id="main-content">
   <!-- 모바일 헤더 -->
   <header class="app-header">
-    <button class="back-btn" aria-label="뒤로 가기" onclick="navigateTo('/results.html')">←</button>
+    <button class="back-btn" id="backBtnHeader" aria-label="뒤로 가기">←</button>
     <h1 id="courseTitle">코스 상세</h1>
     <span class="header-action" id="shareBtn">공유</span>
   </header>
@@ -95,7 +95,7 @@
 </div>
 
 <!-- 만족도 조사 모달 (공유/다른 코스 보기 시 노출) -->
-<div class="satisfaction-modal" id="satisfactionModal" hidden aria-modal="true" role="dialog" aria-labelledby="satisfaction-heading">
+<div class="satisfaction-modal" id="satisfactionModal" style="display:none" aria-modal="true" role="dialog" aria-labelledby="satisfaction-heading">
   <div class="satisfaction-backdrop" id="satisfactionBackdrop"></div>
   <section class="satisfaction-section satisfaction-section--modal" id="satisfactionBlock" aria-labelledby="satisfaction-heading">
     <h2 class="satisfaction-heading" id="satisfaction-heading">이 코스 추천이 도움이 되셨나요?</h2>

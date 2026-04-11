@@ -724,7 +724,7 @@
       return;
     }
 
-    modal.hidden = false;
+    modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
     const scaleEl = document.getElementById('satisfactionScale');
@@ -762,7 +762,7 @@
     }
 
     function cleanup() {
-      modal.hidden = true;
+      modal.style.display = 'none';
       document.body.style.overflow = '';
     }
 
@@ -843,8 +843,8 @@
     });
   });
 
-  // "다른 코스 보기" 버튼에도 만족도 조사 래핑
-  ['backToResults','backToResultsPc'].forEach(id => {
+  // "다른 코스 보기" + 헤더 뒤로가기 버튼에도 만족도 조사 래핑
+  ['backBtnHeader', 'backToResults','backToResultsPc'].forEach(id => {
     document.getElementById(id)?.addEventListener('click', () => {
       showSatisfactionModal(() => performBackToResults());
     });
