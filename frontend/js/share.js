@@ -144,24 +144,30 @@
   }
 
   function shareKakao(courseName) {
-    if (window.Kakao && Kakao.isInitialized()) {
-      Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: courseName || '무리없이 부산 — 이동약자 맞춤 코스',
-          description: '접근성 기반 부산 관광 코스를 확인하세요.',
-          imageUrl: 'https://murineopsi.busan.kr/images/og-image.png',
-          link: {
-            mobileWebUrl: shareUrl,
-            webUrl: shareUrl,
-          },
-        },
-      });
+    if (!window.Kakao) {
+      copyShareLink();
+      showToast('카카오 공유 기능을 불러오지 못했습니다. 링크를 복사했어요.', 'warning');
       return;
     }
 
-    copyShareLink();
-    showToast('카카오톡 SDK 미설정으로 링크 복사로 대체했어요.', 'info');
+    if (!Kakao.isInitialized()) {
+      copyShareLink();
+      showToast('카카오 로그인이 필요합니다. 링크를 복사했어요.', 'info');
+      return;
+    }
+
+    Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: courseName || '무리없이 부산 — 이동약자 맞춤 코스',
+        description: '접근성 기반 부산 관광 코스를 확인하세요.',
+        imageUrl: 'https://murineopsi.busan.kr/images/og-image.png',
+        link: {
+          mobileWebUrl: shareUrl,
+          webUrl: shareUrl,
+        },
+      },
+    });
   }
 
   document.getElementById('deviceShareBtn').addEventListener('click', function () {

@@ -14,5 +14,24 @@
     { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ],
   "categories": ["travel", "lifestyle"],
-  "screenshots": []
+  "screenshots": [
+    {
+      "src": "/images/screenshot_onboarding.png",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "label": "온보딩 화면"
+    },
+    {
+      "src": "/images/screenshot_results.png",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "label": "코스 결과 화면"
+    },
+    {
+      "src": "/images/screenshot_course.png",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "label": "코스 상세 화면"
+    }
+  ]
 }

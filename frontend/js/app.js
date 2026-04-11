@@ -215,6 +215,7 @@ function gradeLabel(grade) {
   if (grade >= 3) return '양호';
   return '주의';
 }
+window.gradeLabel = gradeLabel;
 
 function gradeBadgeClass(grade) {
   if (grade >= 4) return 'badge-green';

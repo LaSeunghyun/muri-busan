@@ -71,7 +71,7 @@ def _distance_between(a: dict, b: dict) -> float:
     dlat = lat2 - lat1
     dlng = math.radians(b["lng"] - a["lng"])
     h = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2) ** 2
-    return 2 * radius * math.asin(math.sqrt(h))
+    return 2 * radius * math.asin(min(1.0, math.sqrt(h)))
 
 
 def _filter_spots(spots: list[dict], mobility_types: list[str], areas: list[str]) -> list[dict]:
