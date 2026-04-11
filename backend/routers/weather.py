@@ -32,10 +32,18 @@ async def fetch_weather_status(date_str: str | None = None) -> dict:
     if not WEATHER_KEY:
         return {"available": False, "is_rainy": False}
     try:
+        # 기상청 API는 base_date가 오늘~최대 +3일까지만 지원.
+        # 미래 여행일 요청 시 "오늘 현재 날씨"로 폴백 (데모 목적)
+        now = datetime.datetime.now()
         if date_str:
-            target = datetime.datetime.strptime(date_str, "%Y%m%d")
+            try:
+                requested = datetime.datetime.strptime(date_str, "%Y%m%d")
+                delta_days = (requested.date() - now.date()).days
+                target = requested if 0 <= delta_days <= 2 else now
+            except Exception:
+                target = now
         else:
-            target = datetime.datetime.now()
+            target = now
         base_date = target.strftime("%Y%m%d")
         base_time = _nearest_base_time(target)
         items = await _call_weather_api(base_date, base_time)
