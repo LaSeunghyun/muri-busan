@@ -19,6 +19,8 @@ loadWeather();
   const resultList = document.getElementById('resultList');
   const resultSummary = document.getElementById('resultSummary');
   const filterTabs = document.getElementById('filterTabs');
+  const dayTabs = document.getElementById('dayTabs');
+  const dayTabBar = document.getElementById('dayTabBar');
   const loadingState = document.getElementById('loadingState');
 
   const typeLabels = {
@@ -28,8 +30,11 @@ loadWeather();
     carrier: '보행보조',
   };
 
+  const dayLabelsMap = { 1: '첫째 날', 2: '둘째 날', 3: '셋째 날', 4: '넷째 날', 5: '다섯째 날' };
+
   let allCourses = [];
   let activeFilter = 'all';
+  let activeDay = 1;  // 0 = 전체 보기, 1+ = 특정 day만
 
   function showSkeletons() {
     if (loadingState) {
@@ -73,6 +78,11 @@ loadWeather();
 
   function getFilteredCourses() {
     let filtered = [...allCourses];
+    // Day 필터 (멀티데이일 때만 적용)
+    const totalDays = parseInt(AppState.days, 10) || 1;
+    if (totalDays > 1 && activeDay > 0) {
+      filtered = filtered.filter(course => (course.day || 1) === activeDay);
+    }
     if (activeFilter === 'favorites') {
       filtered = filtered.filter(course => AppFavorites.has(course.id));
     } else if (activeFilter === 'low-fatigue') {
@@ -81,6 +91,58 @@ loadWeather();
       filtered.sort((a, b) => b.spots.length - a.spots.length);
     }
     return filtered;
+  }
+
+  function renderDayTabs() {
+    if (!dayTabs || !dayTabBar) return;
+    const totalDays = parseInt(AppState.days, 10) || 1;
+    if (totalDays <= 1) {
+      dayTabBar.style.display = 'none';
+      return;
+    }
+    // 코스가 있는 day만 탭으로 노출
+    const dayCounts = new Map();
+    allCourses.forEach(c => {
+      const d = c.day || 1;
+      dayCounts.set(d, (dayCounts.get(d) || 0) + 1);
+    });
+    if (dayCounts.size === 0) {
+      dayTabBar.style.display = 'none';
+      return;
+    }
+    const sortedDays = Array.from(dayCounts.keys()).sort((a, b) => a - b);
+    // activeDay가 코스 없는 day면 첫 번째 가용 day로 보정
+    if (!dayCounts.has(activeDay)) activeDay = sortedDays[0];
+
+    dayTabBar.style.display = '';
+    dayTabs.innerHTML = sortedDays.map(d => {
+      const isActive = d === activeDay;
+      const label = dayLabelsMap[d] || `${d}일차`;
+      const count = dayCounts.get(d);
+      return `<button class="day-tab${isActive ? ' active' : ''}" data-day="${d}" aria-pressed="${isActive}">
+        <span class="day-tab-num">Day ${d}</span>
+        <span class="day-tab-label">${label}</span>
+        <span class="day-tab-count">${count}코스</span>
+      </button>`;
+    }).join('');
+
+    dayTabs.querySelectorAll('.day-tab').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const requested = parseInt(this.dataset.day, 10);
+        const availableDays = Array.from(dayCounts.keys()).sort((a, b) => a - b);
+        // 요청: "첫째날 선택하면 둘째날" — 같은 day를 다시 클릭하면 다음 day로 이동
+        if (requested === activeDay) {
+          const idx = availableDays.indexOf(activeDay);
+          activeDay = availableDays[(idx + 1) % availableDays.length];
+        } else {
+          activeDay = requested;
+        }
+        renderDayTabs();
+        renderCurrentFilter();
+        // 결과 영역 상단으로 부드럽게 스크롤
+        if (resultList) resultList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
   }
 
   function formatTripPeriod(startDate, days) {
@@ -326,6 +388,7 @@ loadWeather();
 
   function renderCurrentFilter() {
     updateFilterTabs();
+    renderDayTabs();
     const filtered = getFilteredCourses();
     renderSummary(filtered);
     renderCourses(filtered);
