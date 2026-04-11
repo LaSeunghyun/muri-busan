@@ -1,4 +1,4 @@
-const CACHE_NAME = 'muriopbs-v2';
+const CACHE_NAME = 'muriopbs-v3';
 const STATIC = ['/', '/onboarding.html', '/results.html', '/course.html', '/share.html', '/offline.html', '/css/style.css', '/js/app.js', '/js/onboarding.js', '/js/results.js', '/js/course.js', '/js/share.js', '/manifest.json'];
 
 self.addEventListener('install', e => {
