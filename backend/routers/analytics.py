@@ -1,8 +1,8 @@
-"""POST /api/log/recommend, /api/log/survey — 사용 로그 및 만족도 조사 저장."""
+"""POST /api/log/recommend, /api/log/survey, /api/log/interaction — 사용 로그 및 만족도 조사 저장."""
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -93,3 +93,53 @@ async def log_survey(req: SurveyRequest):
     except Exception as e:
         logger.warning("만족도 저장 실패: %s", e)
         raise HTTPException(status_code=500, detail="설문 저장에 실패했어요. 잠시 후 다시 시도해주세요.")
+
+
+# ── 사용자 인터랙션 로그 ────────────────────────────────────────────────
+
+ALLOWED_EVENT_TYPES = {
+    "course_view",        # 코스 카드 클릭 → 상세 진입
+    "favorite_toggle",    # 즐겨찾기 추가/제거
+    "filter_change",      # 필터 탭 변경 (전체/저피로순/관광지많은순/즐겨찾기)
+    "day_tab_change",     # Day 탭 전환 (멀티데이)
+    "refresh_click",      # "다시 분석" 클릭
+    "edit_conditions",    # "조건 수정" 클릭
+    "share_click",        # 공유 버튼 클릭
+    "onboarding_complete", # 온보딩 완료 (추천 요청 직전)
+    "survey_skip",        # 만족도 조사 건너뜀
+}
+
+
+class InteractionLogRequest(BaseModel):
+    session_id: str = Field(..., min_length=1, max_length=128)
+    log_id: Optional[str] = None
+    event_type: str = Field(..., min_length=1, max_length=64)
+    event_data: dict[str, Any] = Field(default_factory=dict)
+
+
+class InteractionLogResponse(BaseModel):
+    ok: bool
+
+
+@router.post("/api/log/interaction", response_model=InteractionLogResponse)
+async def log_interaction(req: InteractionLogRequest):
+    """사용자 인터랙션 이벤트 저장 (코스 선택, 필터 변경, 즐겨찾기 등)."""
+    if req.event_type not in ALLOWED_EVENT_TYPES:
+        raise HTTPException(status_code=400, detail=f"알 수 없는 이벤트 타입: {req.event_type}")
+
+    client = get_client()
+    if not client:
+        return InteractionLogResponse(ok=True)
+
+    try:
+        data = {
+            "session_id": req.session_id,
+            "log_id": req.log_id,
+            "event_type": req.event_type,
+            "event_data": req.event_data,
+        }
+        client.table("user_interactions").insert(data).execute()
+        return InteractionLogResponse(ok=True)
+    except Exception as e:
+        logger.warning("인터랙션 로그 저장 실패 [%s]: %s", req.event_type, e)
+        return InteractionLogResponse(ok=True)  # fire-and-forget: 실패해도 UX 영향 없음

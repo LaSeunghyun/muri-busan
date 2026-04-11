@@ -177,6 +177,25 @@ async function submitSatisfactionSurvey(score, reasonCategories, reasonText) {
   }
 }
 
+/* ── 인터랙션 로그 (fire-and-forget) ── */
+function logInteraction(eventType, eventData = {}) {
+  try {
+    const body = JSON.stringify({
+      session_id: AppState.session_id,
+      log_id: AppState.log_id || null,
+      event_type: eventType,
+      event_data: eventData,
+    });
+    // sendBeacon 우선 (페이지 이탈 시에도 전송 보장), 폴백은 fetch keepalive
+    const url = '/api/log/interaction';
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+    } else {
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+    }
+  } catch (_) { /* 로깅 실패는 무시 */ }
+}
+
 /* ── 토스트 알림 ── */
 function showToast(message, type = 'info') {
   let container = document.querySelector('.toast-container');

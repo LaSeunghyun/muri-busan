@@ -13,7 +13,12 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 _CACHE_DIR = Path(__file__).resolve().parent.parent / "data" / "ai_cache"
 
-_MODEL_NAME = "gemini-2.5-flash-lite"
+# 우선순위 순으로 시도할 모델 목록 (최신 → 안정)
+_MODEL_CANDIDATES = [
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+]
+_MODEL_NAME = _MODEL_CANDIDATES[0]
 _client = None
 
 # Supabase 클라이언트 (lazy init)
@@ -48,14 +53,29 @@ _GEMINI_MIN_INTERVAL = 1.0  # 최소 1초 간격
 
 
 def _get_client():
-    global _client
+    global _client, _MODEL_NAME
     if _client is None:
         import google.generativeai as genai
         api_key = os.getenv("GEMINI_API_KEY", "")
         if not api_key:
+            logger.info("GEMINI_API_KEY 미설정 — AI 설명 비활성")
             return None
         genai.configure(api_key=api_key)
-        _client = genai.GenerativeModel(_MODEL_NAME)
+        # 모델 후보를 순서대로 시도해 유효한 첫 번째를 사용
+        for model_name in _MODEL_CANDIDATES:
+            try:
+                candidate = genai.GenerativeModel(model_name)
+                # 빠른 유효성 확인 (빈 프롬프트로 메타데이터 접근)
+                candidate.generate_content(
+                    "ping",
+                    generation_config={"max_output_tokens": 1},
+                )
+                _MODEL_NAME = model_name
+                _client = candidate
+                logger.info("Gemini 모델 초기화 성공: %s", model_name)
+                break
+            except Exception as e:
+                logger.warning("Gemini 모델 %s 실패, 다음 후보 시도: %s", model_name, e)
     return _client
 
 

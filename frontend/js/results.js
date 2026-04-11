@@ -36,7 +36,7 @@ loadWeather();
 
   let allCourses = [];
   let activeFilter = 'all';
-  let activeDay = 1;  // 0 = 전체 보기, 1+ = 특정 day만
+  let activeDay = 0;  // 0 = 전체 보기, 1+ = 특정 day만
 
   function showSkeletons() {
     if (loadingState) {
@@ -114,11 +114,17 @@ loadWeather();
       return;
     }
     const sortedDays = Array.from(dayCounts.keys()).sort((a, b) => a - b);
-    // activeDay가 코스 없는 day면 첫 번째 가용 day로 보정
-    if (!dayCounts.has(activeDay)) activeDay = sortedDays[0];
+    // activeDay가 코스 없는 day면 전체 보기(0)로 보정 (0은 항상 유효)
+    if (activeDay !== 0 && !dayCounts.has(activeDay)) activeDay = 0;
 
     dayTabBar.style.display = '';
-    dayTabs.innerHTML = sortedDays.map(d => {
+    const totalCount = allCourses.length;
+    const allTab = `<button class="day-tab${activeDay === 0 ? ' active' : ''}" data-day="0" aria-pressed="${activeDay === 0}">
+      <span class="day-tab-num">전체</span>
+      <span class="day-tab-label">모든 날</span>
+      <span class="day-tab-count">${totalCount}코스</span>
+    </button>`;
+    dayTabs.innerHTML = allTab + sortedDays.map(d => {
       const isActive = d === activeDay;
       const label = dayLabelsMap[d] || `${d}일차`;
       const count = dayCounts.get(d);
@@ -133,12 +139,18 @@ loadWeather();
       btn.addEventListener('click', function () {
         const requested = parseInt(this.dataset.day, 10);
         const availableDays = Array.from(dayCounts.keys()).sort((a, b) => a - b);
-        // 요청: "첫째날 선택하면 둘째날" — 같은 day를 다시 클릭하면 다음 day로 이동
-        if (requested === activeDay) {
-          const idx = availableDays.indexOf(activeDay);
-          activeDay = availableDays[(idx + 1) % availableDays.length];
+        const prevDay = activeDay;
+        if (requested === 0) {
+          // 전체 탭은 항상 전체 보기로
+          activeDay = 0;
+        } else if (requested === activeDay) {
+          // 같은 day를 다시 클릭하면 전체 보기로 전환
+          activeDay = 0;
         } else {
           activeDay = requested;
+        }
+        if (prevDay !== activeDay) {
+          logInteraction('day_tab_change', { day_number: activeDay, previous_day: prevDay });
         }
         renderDayTabs();
         renderCurrentFilter();
@@ -219,11 +231,13 @@ loadWeather();
     const editBtn = document.getElementById('editConditionsBtn');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', function () {
+        logInteraction('refresh_click', { filter_active: activeFilter, course_count: courses.length });
         rerunRecommendations();
       });
     }
     if (editBtn) {
       editBtn.addEventListener('click', function () {
+        logInteraction('edit_conditions', { filter_active: activeFilter });
         navigateTo('/onboarding.html');
       });
     }
@@ -371,6 +385,7 @@ loadWeather();
         const added = AppFavorites.toggle(course.id);
         favBtn.textContent = added ? '♥' : '♡';
         favBtn.style.color = added ? 'var(--primary)' : '';
+        logInteraction('favorite_toggle', { course_id: course.id, action: added ? 'add' : 'remove' });
         if (activeFilter === 'favorites') {
           renderCurrentFilter();
         }
@@ -380,6 +395,14 @@ loadWeather();
       }
 
       card.addEventListener('click', function () {
+        logInteraction('course_view', {
+          course_id: course.id,
+          course_name: course.name,
+          course_rank: courses.indexOf(course),
+          filter_active: activeFilter,
+          day_active: activeDay,
+          ai_description: !!course.ai_description,
+        });
         AppState.selected_course = course;
         navigateTo('/course.html?id=' + course.id);
       });
@@ -572,7 +595,11 @@ loadWeather();
   document.addEventListener('click', function (e) {
     const tab = e.target.closest('[data-filter]');
     if (!tab) return;
+    const prev = activeFilter;
     activeFilter = tab.dataset.filter;
+    if (prev !== activeFilter) {
+      logInteraction('filter_change', { filter_type: activeFilter, previous_filter: prev });
+    }
     renderCurrentFilter();
   });
 

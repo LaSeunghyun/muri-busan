@@ -281,37 +281,45 @@ def run_persona_test(page: Any, persona: dict, base_url: str) -> dict[str, Any]:
         assert page.locator("#step1").is_visible(), "Step1 섹션 미노출"
         result["steps_completed"].append("온보딩 페이지 진입")
 
-        # ── Step 2: mobility_type 선택 ────────────────────────────────
-        type_card = page.locator(f"#typeGrid .ob-choice-card[data-type='{mobility_type}']")
-        assert type_card.count() > 0, f"mobility_type 카드 없음: {mobility_type}"
+        # ── Step 2: mobility_type 선택 (모바일 뷰포트 → #typeGrid 활성) ─
+        # visible 한 그리드를 우선 선택 (모바일: #typeGrid, PC: #typeGridPc)
+        type_card = page.locator(
+            f".ob-choice-card[data-type='{mobility_type}']"
+        ).filter(has=None).first
+        type_card.wait_for(state="visible", timeout=5_000)
         type_card.click()
         assert type_card.get_attribute("aria-checked") == "true", \
             f"aria-checked 미변경: {mobility_type}"
         result["steps_completed"].append(f"이동약자 유형 선택: {mobility_type}")
 
-        next1 = page.locator("#step1Next")
+        # 활성화된 다음 버튼 클릭 (모바일: #step1Next, PC: #step1NextPc)
+        next1 = page.locator("#step1Next, #step1NextPc").filter(visible=True).first
+        next1.wait_for(state="visible", timeout=3_000)
         assert not next1.is_disabled(), "Step1 다음 버튼 비활성"
         next1.click()
-        page.wait_for_selector("#step2:visible", timeout=5_000)
+        page.locator("#step2").wait_for(state="visible", timeout=5_000)
         result["steps_completed"].append("Step2 진입")
 
         # ── Step 3: days 선택 ─────────────────────────────────────────
-        day_chip = page.locator(f"#durationRow .duration-chip[data-days='{days}']")
-        assert day_chip.count() > 0, f"days 칩 없음: {days}"
+        day_chip = page.locator(
+            f".duration-chip[data-days='{days}']"
+        ).filter(has=None).first
+        day_chip.wait_for(state="visible", timeout=3_000)
         day_chip.click()
         assert day_chip.get_attribute("aria-checked") == "true", \
             f"days aria-checked 미변경: {days}"
         result["steps_completed"].append(f"일정 선택: {days}일")
 
-        next2 = page.locator("#step2Next")
+        next2 = page.locator("#step2Next, #step2NextPc").filter(visible=True).first
+        next2.wait_for(state="visible", timeout=3_000)
         assert not next2.is_disabled(), "Step2 다음 버튼 비활성"
         next2.click()
-        page.wait_for_selector("#step3:visible", timeout=5_000)
+        page.locator("#step3").wait_for(state="visible", timeout=5_000)
         result["steps_completed"].append("Step3 진입")
 
         # ── Step 4: 권역 선택 (선택사항) ─────────────────────────────
         if area:
-            area_chip = page.locator(f"#areaGrid .area-chip[data-area='{area}']")
+            area_chip = page.locator(f".area-chip[data-area='{area}']").filter(visible=True).first
             if area_chip.count() > 0:
                 area_chip.click()
                 result["steps_completed"].append(f"권역 선택: {area}")
@@ -319,8 +327,8 @@ def run_persona_test(page: Any, persona: dict, base_url: str) -> dict[str, Any]:
                 result["warnings"].append(f"권역 칩 없음: {area} → 전체 권역으로 진행")
 
         # ── Step 5: 코스 추천 요청 ────────────────────────────────────
-        submit_btn = page.locator("#step3Next")
-        assert submit_btn.count() > 0, "#step3Next 버튼 없음"
+        submit_btn = page.locator("#step3Next, #step3NextPc").filter(visible=True).first
+        assert submit_btn.count() > 0, "step3Next 버튼 없음"
         submit_btn.click()
 
         # 결과 페이지로 이동 대기
@@ -578,8 +586,8 @@ def test_all_personas(browser, live_server):
 
         print(f"[{idx:>2}/50] {pid} | {persona['name']:6s} | {mt:10s} | {days}일 | {area}", end=" ")
 
-        # 각 페르소나마다 격리된 새 탭 사용
-        page = browser.new_page()
+        # 각 페르소나마다 격리된 새 탭 사용 (모바일 뷰포트 — PC CSS에서 #typeGrid 숨김 방지)
+        page = browser.new_page(viewport={"width": 390, "height": 844})
         page.set_default_timeout(15_000)
         try:
             result = run_persona_test(page, persona, base_url)
