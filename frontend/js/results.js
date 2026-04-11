@@ -83,6 +83,32 @@ loadWeather();
     return filtered;
   }
 
+  function formatTripPeriod(startDate, days) {
+    if (!startDate) return '';
+    const start = new Date(startDate);
+    if (isNaN(start.getTime())) return startDate;
+    const dayCount = Math.max(1, parseInt(days, 10) || 1);
+    if (dayCount === 1) {
+      return startDate;
+    }
+    const end = new Date(start);
+    end.setDate(start.getDate() + dayCount - 1);
+    const pad = (n) => String(n).padStart(2, '0');
+    const endStr = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}`;
+    return `${startDate} ~ ${endStr}`;
+  }
+
+  function weatherChip(weather) {
+    if (!weather || !weather.available) return '';
+    const icon = weather.icon || '⛅';
+    const sky = weather.sky || '';
+    const tmp = weather.tmp || '';
+    const parts = [icon];
+    if (sky) parts.push(sky);
+    if (tmp) parts.push(tmp);
+    return `<span class="summary-chip summary-chip-weather">${parts.join(' ')}</span>`;
+  }
+
   function renderSummary(courses) {
     const meta = AppState.recommendation_meta || {};
     const selectedTypes = AppState.mobility_types.map(type => typeLabels[type] || type).join(' · ') || '선택 없음';
@@ -114,7 +140,8 @@ loadWeather();
       <div class="result-summary-chips" aria-label="추천 조건 요약">
         <span class="summary-chip">여행자 ${selectedTypes}</span>
         <span class="summary-chip">${AppState.days}일 일정</span>
-        ${AppState.start_date ? `<span class="summary-chip">시작일 ${AppState.start_date}</span>` : ''}
+        ${AppState.start_date ? `<span class="summary-chip">기간 ${formatTripPeriod(AppState.start_date, AppState.days)}</span>` : ''}
+        ${weatherChip(meta.weather)}
         <span class="summary-chip">요청 권역 ${selectedAreas}</span>
         <span class="summary-chip">적용 권역 ${appliedAreas}</span>
       </div>
