@@ -68,8 +68,7 @@ async def log_recommendation(req: RecommendLogRequest):
         return RecommendLogResponse(ok=True, log_id=log_id)
     except Exception as e:
         logger.warning("추천 로그 저장 실패: %s", e)
-        # 로깅 실패해도 사용자 경험 영향 없도록 200 반환
-        return RecommendLogResponse(ok=False, log_id=None)
+        raise HTTPException(status_code=500, detail="추천 로그 저장에 실패했어요. 잠시 후 다시 시도해주세요.")
 
 
 @router.post("/api/log/survey", response_model=SurveyResponse)

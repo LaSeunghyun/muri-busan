@@ -84,8 +84,7 @@ async def _fetch_detail_info(client: httpx.AsyncClient, contentid: str) -> dict:
         if not items:
             return {}
         item_list = items.get("item", [])
-        if isinstance(item_list, dict):
-            item_list = [item_list]
+        item_list = item_list if isinstance(item_list, list) else [item_list] if item_list else []
 
         result: dict[str, bool | None] = {}
         for it in item_list:
@@ -170,9 +169,10 @@ async def fetch_spots(area: str | None = None) -> list[dict]:
         async with httpx.AsyncClient(timeout=10.0) as c:
             r = await c.get(url)
             r.raise_for_status()
-            items = r.json()["response"]["body"]["items"]["item"]
+            item_list = r.json()["response"]["body"]["items"]["item"]
+            item_list = item_list if isinstance(item_list, list) else [item_list] if item_list else []
 
-        spots = _convert_tourapi(items)
+        spots = _convert_tourapi(item_list)
         spots = await _enrich_accessibility(spots)   # 접근성 보강
 
         # 접근성 검증이 완료된 자체 큐레이션 실데이터(busan_spots.json)를 병합

@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sys
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -24,8 +25,16 @@ from fastapi.staticfiles import StaticFiles
 from backend.routers import analytics, courses, recommend, report, search, share, weather
 
 
+_REQUIRED_ENV_VARS = ["TOUR_API_KEY", "GEMINI_API_KEY"]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    missing = [k for k in _REQUIRED_ENV_VARS if not os.getenv(k)]
+    if missing:
+        for k in missing:
+            logger.error("필수 환경변수 누락: %s — .env 파일 또는 배포 환경을 확인하세요.", k)
+        sys.exit(1)
     share.init_share_db()
     share.cleanup_expired_shares()
     report.init_report_db()
