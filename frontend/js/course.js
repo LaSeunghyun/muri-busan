@@ -713,7 +713,7 @@
     navigateTo('/results.html');
   }
 
-  // 만족도 모달 노출 후 원래 액션 실행
+  // 만족도 모달 노출 후 원래 액션 실행 (onclick 직접 할당으로 재진입 안전)
   function showSatisfactionModal(afterAction) {
     const modal = document.getElementById('satisfactionModal');
     if (!modal) { afterAction(); return; }
@@ -727,13 +727,6 @@
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
 
-    function cleanup() {
-      modal.hidden = true;
-      document.body.style.overflow = '';
-    }
-
-    let selectedScore = 0;
-
     const scaleEl = document.getElementById('satisfactionScale');
     const panelEl = document.getElementById('satisfactionReasonPanel');
     const chipsEl = document.getElementById('satisfactionReasonChips');
@@ -743,9 +736,22 @@
     const skipEl = document.getElementById('satisfactionSkip');
     const doneEl = document.getElementById('satisfactionDone');
     const backdropEl = document.getElementById('satisfactionBackdrop');
+    const actionsEl = modal.querySelector('.satisfaction-actions');
+
+    // 상태 초기화 (재진입 대비)
+    let selectedScore = 0;
+    scaleEl.querySelectorAll('.satisfaction-btn').forEach(b => b.setAttribute('aria-checked', 'false'));
+    chipsEl.querySelectorAll('.satisfaction-reason-chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+    if (textEl) textEl.value = '';
+    if (countEl) countEl.textContent = '0';
+    submitEl.disabled = true;
+    if (scaleEl) scaleEl.style.display = '';
+    if (actionsEl) actionsEl.style.display = '';
+    if (doneEl) doneEl.hidden = true;
+    panelEl.classList.remove('open');
+    panelEl.setAttribute('aria-hidden', 'true');
 
     function openReasonPanel(open) {
-      if (!panelEl) return;
       if (open) {
         panelEl.classList.add('open');
         panelEl.setAttribute('aria-hidden', 'false');
@@ -755,59 +761,54 @@
       }
     }
 
-    // 점수 버튼 핸들러 (1회 바인딩, 반복 대응 위해 중복 체크)
-    if (!scaleEl.dataset.bound) {
-      scaleEl.dataset.bound = '1';
-      scaleEl.querySelectorAll('.satisfaction-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-          const score = parseInt(this.dataset.score, 10);
-          selectedScore = score;
-          scaleEl.querySelectorAll('.satisfaction-btn').forEach(b => {
-            b.setAttribute('aria-checked', b === this ? 'true' : 'false');
-          });
-          submitEl.disabled = false;
-          openReasonPanel(score <= 2);
-        });
-      });
+    function cleanup() {
+      modal.hidden = true;
+      document.body.style.overflow = '';
     }
 
-    if (chipsEl && !chipsEl.dataset.bound) {
-      chipsEl.dataset.bound = '1';
-      chipsEl.querySelectorAll('.satisfaction-reason-chip').forEach(chip => {
-        chip.addEventListener('click', function () {
-          const pressed = this.getAttribute('aria-pressed') === 'true';
-          this.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+    // 점수 버튼: onclick 직접 할당 (addEventListener 누적 방지)
+    scaleEl.querySelectorAll('.satisfaction-btn').forEach(btn => {
+      btn.onclick = function () {
+        const score = parseInt(this.dataset.score, 10);
+        selectedScore = score;
+        scaleEl.querySelectorAll('.satisfaction-btn').forEach(b => {
+          b.setAttribute('aria-checked', b === this ? 'true' : 'false');
         });
-      });
-    }
+        submitEl.disabled = false;
+        openReasonPanel(score <= 2);
+      };
+    });
 
-    if (textEl && countEl && !textEl.dataset.bound) {
-      textEl.dataset.bound = '1';
-      textEl.addEventListener('input', function () {
+    // 사유 칩
+    chipsEl.querySelectorAll('.satisfaction-reason-chip').forEach(chip => {
+      chip.onclick = function () {
+        const pressed = this.getAttribute('aria-pressed') === 'true';
+        this.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+      };
+    });
+
+    // 텍스트 카운터
+    if (textEl && countEl) {
+      textEl.oninput = function () {
         countEl.textContent = String(this.value.length);
-      });
+      };
     }
 
     // 제출
-    const submitHandler = async () => {
+    submitEl.onclick = async function () {
       if (!selectedScore) return;
       submitEl.disabled = true;
-      const selectedReasons = chipsEl
-        ? Array.from(chipsEl.querySelectorAll('.satisfaction-reason-chip[aria-pressed="true"]'))
-            .map(c => c.dataset.reason)
-        : [];
+      const selectedReasons = Array.from(chipsEl.querySelectorAll('.satisfaction-reason-chip[aria-pressed="true"]')).map(c => c.dataset.reason);
       const text = textEl ? textEl.value.trim() : '';
       const res = typeof submitSatisfactionSurvey === 'function'
         ? await submitSatisfactionSurvey(selectedScore, selectedReasons, text)
         : { ok: false };
       if (res && res.ok) {
         sessionStorage.setItem('mb_survey_done', '1');
-        if (scaleEl) scaleEl.style.display = 'none';
+        scaleEl.style.display = 'none';
         openReasonPanel(false);
-        const actionsEl = modal.querySelector('.satisfaction-actions');
         if (actionsEl) actionsEl.style.display = 'none';
         if (doneEl) doneEl.hidden = false;
-        // 1.5초 후 원래 액션 실행
         setTimeout(() => {
           cleanup();
           afterAction();
@@ -818,29 +819,20 @@
       }
     };
 
-    // 스킵 핸들러
-    const skipHandler = () => {
+    // 건너뛰기
+    skipEl.onclick = function () {
       sessionStorage.setItem('mb_survey_done', '1');
       cleanup();
       afterAction();
     };
 
-    // 백드롭 클릭 = 스킵
-    const backdropHandler = () => skipHandler();
-
-    // 중복 바인딩 방지를 위해 매번 교체
-    const newSubmit = submitEl.cloneNode(true);
-    submitEl.parentNode.replaceChild(newSubmit, submitEl);
-    newSubmit.addEventListener('click', submitHandler);
-
-    const newSkip = skipEl.cloneNode(true);
-    skipEl.parentNode.replaceChild(newSkip, skipEl);
-    newSkip.addEventListener('click', skipHandler);
-
+    // 백드롭 클릭 = 건너뛰기
     if (backdropEl) {
-      const newBackdrop = backdropEl.cloneNode(true);
-      backdropEl.parentNode.replaceChild(newBackdrop, backdropEl);
-      newBackdrop.addEventListener('click', backdropHandler);
+      backdropEl.onclick = function () {
+        sessionStorage.setItem('mb_survey_done', '1');
+        cleanup();
+        afterAction();
+      };
     }
   }
 
