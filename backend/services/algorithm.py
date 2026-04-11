@@ -10,7 +10,7 @@ from typing import Any
 # CTO/CEO/CDO 합의: 4유형 모두 실질 차이가 나도록 재조정
 WEIGHTS: dict[str, dict[str, float]] = {
     "wheelchair": {"distance": 0.4, "slope": 8.0, "wait": 0.8},   # 경사로·엘리베이터 필수
-    "stroller":   {"distance": 0.35, "slope": 7.0, "wait": 0.7},  # 유아차 접근로 필수
+    "stroller":   {"distance": 0.35, "slope": 7.0, "wait": 1.0},  # 유아차 접근로 필수 (아이 동반 대기 피로 반영)
     "senior":     {"distance": 0.35, "slope": 5.0, "wait": 1.2},  # 경사 덜 민감, 대기·체력에 민감
     "carrier":    {"distance": 0.3, "slope": 10.0, "wait": 0.5},  # 평탄 노면 최우선, 단차 매우 민감
 }
@@ -93,8 +93,11 @@ def _filter_spots(spots: list[dict], mobility_types: list[str], areas: list[str]
                     accessible = False
                     break
             elif mt == "senior":
-                # 시니어: 등급 2 이상 (관대) — 쉼터 가산은 스코어링에서 처리
-                if spot.get("accessibility_grade", 0) < 2:
+                # 시니어: 등급 3 이상 + 경사 8% 이하 (급경사 코스 차단)
+                if spot.get("accessibility_grade", 0) < 3:
+                    accessible = False
+                    break
+                if spot.get("slope_pct", 0) > 8.0:
                     accessible = False
                     break
             elif mt == "carrier":
@@ -279,6 +282,30 @@ def _build_day_course(
     }
 
 
+# 페르소나별 Day1 시작 선호 권역 (접근성 기준 충족 스팟 중에서 앞으로 배치)
+_PERSONA_PREFERRED_AREA: dict[str, str] = {
+    "wheelchair": "수영",   # 광안리권 — 평지·해변 산책로
+    "stroller":   "해운대", # 해운대권 — 유아 친화 시설 밀집
+    "senior":     "중구",   # 남포권 — 대중교통 접근성 우수
+    "carrier":    "기장",   # 기장권 — 평탄 노면·한적한 환경
+}
+
+
+def _reorder_pool_for_persona(
+    pool: list[dict], mobility_types: list[str]
+) -> list[dict]:
+    """페르소나별 선호 권역 스팟을 풀 앞으로 배치해 Day1 출발 권역을 다양화한다.
+    단일 페르소나가 선택됐을 때만 적용하며, 접근성 기준은 변경하지 않는다."""
+    if len(mobility_types) != 1:
+        return pool
+    preferred = _PERSONA_PREFERRED_AREA.get(mobility_types[0])
+    if not preferred:
+        return pool
+    preferred_spots = [s for s in pool if s["area"] == preferred]
+    other_spots = [s for s in pool if s["area"] != preferred]
+    return preferred_spots + other_spots
+
+
 def recommend_courses(
     spots: list[dict],
     mobility_types: list[str],
@@ -292,8 +319,11 @@ def recommend_courses(
     if not filtered:
         return []
 
-    # 피로도 오름차순 정렬
+    # 피로도 오름차순 정렬 후 페르소나별 선호 권역 스팟을 앞으로 배치
     pool = sorted(filtered, key=lambda s: calc_fatigue(0, s["slope_pct"], s["wait_time_min"], weights))
+    # areas 지정이 없는 경우에만 다양성 재정렬 적용 (특정 권역 요청 시 덮어쓰지 않음)
+    if not areas:
+        pool = _reorder_pool_for_persona(pool, mobility_types)
 
     # 거리 행렬 사전 계산 (O(N²) 중복 제거)
     dist_matrix: dict[tuple[str, str], float] = {}
