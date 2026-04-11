@@ -86,7 +86,7 @@
   getAll('step1Next').forEach(function (btn) {
     btn.addEventListener('click', function () {
       if (AppState.mobility_types.length > 0) {
-        logInteraction('onboarding_step', { step: 1, mobility_types: AppState.mobility_types });
+        typeof logInteraction === 'function' && logInteraction('onboarding_step', { step: 1, mobility_types: AppState.mobility_types });
         showStep(2);
       }
     });
@@ -145,7 +145,7 @@
   getAll('step2Next').forEach(function (btn) {
     btn.addEventListener('click', function () {
       if (AppState.days > 0) {
-        logInteraction('onboarding_step', { step: 2, days: AppState.days, start_date: AppState.start_date });
+        typeof logInteraction === 'function' && logInteraction('onboarding_step', { step: 2, days: AppState.days, start_date: AppState.start_date });
         showStep(3);
       }
     });
@@ -192,7 +192,7 @@
         b.textContent = '추천 코스 분석 중...';
       });
 
-      logInteraction('onboarding_complete', {
+      typeof logInteraction === 'function' && logInteraction('onboarding_complete', {
         mobility_types: AppState.mobility_types,
         days: AppState.days,
         areas: AppState.areas,
