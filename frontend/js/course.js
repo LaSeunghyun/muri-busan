@@ -2,6 +2,17 @@
  * 무리없이 부산 — 코스 상세 + 지도 렌더링.
  */
 (async function () {
+  // B-005: runtime-config.js가 defer 로드될 경우 KAKAO_MAP_KEY 설정 대기
+  async function waitForKakaoKey(maxMs = 3000) {
+    if (window.KAKAO_MAP_KEY) return;
+    const step = 50;
+    for (let t = 0; t < maxMs; t += step) {
+      await new Promise(r => setTimeout(r, step));
+      if (window.KAKAO_MAP_KEY) return;
+    }
+  }
+  await waitForKakaoKey();
+
   const urlId = new URLSearchParams(location.search).get('id');
   let course = AppState.selected_course;
 
@@ -40,8 +51,10 @@
     if (kakaoLoader) return kakaoLoader;
 
     kakaoLoader = new Promise((resolve, reject) => {
+      // B-001: 실패 시 kakaoLoader를 null로 리셋하여 재시도 가능하게
+      const doReject = (err) => { kakaoLoader = null; reject(err); };
       const finish = () => {
-        if (!window.kakao) return reject(new Error('kakao 없음'));
+        if (!window.kakao) return doReject(new Error('kakao 없음'));
         window.kakao.maps.load(() => resolve(window.kakao));
       };
 
@@ -52,7 +65,7 @@
           finish();
         } else {
           existing.addEventListener('load', finish, { once: true });
-          existing.addEventListener('error', reject, { once: true });
+          existing.addEventListener('error', doReject, { once: true });
           // 스크립트가 이미 로드 완료됐지만 이벤트를 놓쳤을 경우 대비
           setTimeout(() => { if (window.kakao) finish(); }, 200);
         }
@@ -64,7 +77,7 @@
       // services 라이브러리 포함 (Places 검색에 필요)
       script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${window.KAKAO_MAP_KEY}&autoload=false&libraries=services`;
       script.onload = finish;
-      script.onerror = reject;
+      script.onerror = doReject;
       document.head.appendChild(script);
     });
 
@@ -75,6 +88,8 @@
   async function fetchRoadPath(spotList) {
     if (spotList.length < 2) return null;
     try {
+      // B-002: kakao 로드 보장 (race condition 방지)
+      await loadKakaoSdk();
       const coords = spotList.map(s => `${s.lng},${s.lat}`).join(';');
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 6000);
@@ -86,6 +101,8 @@
       if (!res.ok) return null;
       const data = await res.json();
       if (data.code === 'Ok' && data.routes?.[0]) {
+        // B-002: optional chaining으로 kakao.maps.LatLng 접근 안전화
+        if (!kakao?.maps?.LatLng) return null;
         return data.routes[0].geometry.coordinates.map(
           ([lng, lat]) => new kakao.maps.LatLng(lat, lng)
         );
@@ -412,8 +429,12 @@
     }
 
     if (!window.kakao?.maps?.services) {
-      // Places 서비스 미활성화 시 백엔드 API로 직접 폴백
-      await searchPlacesFallback(keyword);
+      // B-010: Places 서비스 미활성화 시 백엔드 API로 직접 폴백 (try-catch 보호)
+      try {
+        await searchPlacesFallback(keyword);
+      } catch (err) {
+        if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">장소 검색에 실패했습니다. 다시 시도해주세요.</div>';
+      }
       return;
     }
 
@@ -424,8 +445,12 @@
       } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
         resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">검색 결과가 없습니다.</div>';
       } else {
-        // 카카오 Places 실패 시 백엔드 API로 폴백
-        await searchPlacesFallback(keyword);
+        // B-010: 카카오 Places 실패 시 백엔드 API로 폴백 (try-catch 보호)
+        try {
+          await searchPlacesFallback(keyword);
+        } catch (err) {
+          if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">장소 검색에 실패했습니다. 다시 시도해주세요.</div>';
+        }
       }
     }, {
       location: new kakao.maps.LatLng(35.1796, 129.0756),
