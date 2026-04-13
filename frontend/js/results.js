@@ -38,6 +38,16 @@ loadWeather();
   let activeFilter = 'all';
   let activeDay = 0;  // 0 = 전체 보기, 1+ = 특정 day만
 
+  function getCategoryFallback(course) {
+    const name = (course.name || '') + (course.spots?.map(s => s.name).join('') || '');
+    if (/해수욕|바다|해변|해안|송도|광안|해운대/.test(name)) return { icon: '🏖️', bg: '#DBEAFE', color: '#1e40af' };
+    if (/공원|산|자연|숲|생태/.test(name))                    return { icon: '🌿', bg: '#D1FAE5', color: '#065f46' };
+    if (/박물관|전시|역사|문화|기념/.test(name))               return { icon: '🏛️', bg: '#E0E7FF', color: '#3730a3' };
+    if (/음식|맛집|시장|먹거리|식당/.test(name))               return { icon: '🍜', bg: '#FEF3C7', color: '#92400e' };
+    if (/교통|역|터미널|항구/.test(name))                      return { icon: '🚌', bg: '#F3F4F6', color: '#374151' };
+    return { icon: '📍', bg: 'linear-gradient(135deg,#003087,#0052cc)', color: 'rgba(255,255,255,0.8)' };
+  }
+
   function showSkeletons() {
     if (loadingState) {
       loadingState.style.display = 'none';
@@ -47,6 +57,7 @@ loadWeather();
       const sk = document.createElement('div');
       sk.className = 'skeleton-card';
       sk.innerHTML = `
+        <div class="sk sk-img"></div>
         <div class="sk sk-title"></div>
         <div class="sk sk-text"></div>
         <div class="sk sk-text sk-short"></div>`;
@@ -121,7 +132,7 @@ loadWeather();
     const totalCount = allCourses.length;
     const allTab = `<button class="day-tab${activeDay === 0 ? ' active' : ''}" data-day="0" aria-pressed="${activeDay === 0}">
       <span class="day-tab-num">전체</span>
-      <span class="day-tab-label">모든 날</span>
+      <span class="day-tab-label">전체 요약</span>
       <span class="day-tab-count">${totalCount}코스</span>
     </button>`;
     dayTabs.innerHTML = allTab + sortedDays.map(d => {
@@ -258,10 +269,96 @@ loadWeather();
       </div>`;
   }
 
+  function renderOverviewTab(courses) {
+    if (loadingState) loadingState.style.display = 'none';
+
+    const totalSpots = [...new Set(courses.flatMap(c => c.spots.map(s => s.id || s.name)))].length;
+    const barrierFreeCount = courses.flatMap(c => c.spots).filter(s => s.wheelchair_accessible === true).length;
+    const totalDays = parseInt(AppState.days, 10) || 1;
+    const avgFatigue = courses.length ? Math.round(courses.reduce((a, c) => a + c.total_fatigue, 0) / courses.length) : 0;
+
+    const dayHighlights = [];
+    for (let d = 1; d <= totalDays; d++) {
+      const dayCourses = courses.filter(c => (c.day || 1) === d);
+      if (dayCourses.length) {
+        const best = dayCourses.slice().sort((a, b) => a.total_fatigue - b.total_fatigue)[0];
+        dayHighlights.push({ day: d, course: best });
+      }
+    }
+
+    resultList.innerHTML = `
+      <div class="overview-tab">
+        <div class="overview-stats">
+          <div class="overview-stat">
+            <div class="overview-stat-num">${courses.length}</div>
+            <div class="overview-stat-label">추천 코스</div>
+          </div>
+          <div class="overview-stat">
+            <div class="overview-stat-num">${totalSpots}</div>
+            <div class="overview-stat-label">총 장소</div>
+          </div>
+          <div class="overview-stat">
+            <div class="overview-stat-num">${barrierFreeCount}</div>
+            <div class="overview-stat-label">배리어프리 ♿</div>
+          </div>
+          <div class="overview-stat">
+            <div class="overview-stat-num">${avgFatigue}</div>
+            <div class="overview-stat-label">평균 피로도</div>
+          </div>
+        </div>
+
+        <h3 class="overview-section-title">📅 일자별 추천 하이라이트</h3>
+        <div class="overview-highlights">
+          ${dayHighlights.map(({ day, course }) => {
+            const thumb = course.spots[0]?.image_url;
+            const fb = getCategoryFallback(course);
+            return `
+            <div class="overview-day-card" data-course-id="${course.id}">
+              <div class="overview-day-thumb" style="background:${thumb ? 'transparent' : fb.bg}">
+                ${thumb
+                  ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(course.spots[0].name)}" loading="lazy" onerror="this.onerror=null;this.parentElement.style.background='${fb.bg}';this.remove();">`
+                  : `<span style="font-size:32px">${fb.icon}</span>`}
+                <div class="overview-day-badge">Day ${day}</div>
+              </div>
+              <div class="overview-day-info">
+                <div class="overview-day-name">${escapeHtml(course.name)}</div>
+                <div class="overview-day-meta">📍 ${course.spots.length}개소 · 피로도 ${course.total_fatigue} · ${course.distance_km}km</div>
+                <div class="overview-day-spots">${course.spots.slice(0, 3).map(s => escapeHtml(s.name)).join(' → ')}${course.spots.length > 3 ? ' ...' : ''}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <div class="overview-cta">
+          <p class="overview-cta-hint">각 날짜 탭을 선택해서 코스를 골라보세요</p>
+        </div>
+      </div>`;
+
+    resultList.querySelectorAll('.overview-day-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const dayIdx = dayHighlights.findIndex(h => h.course.id == card.dataset.courseId);
+        if (dayIdx >= 0) {
+          activeDay = dayHighlights[dayIdx].day;
+          renderDayTabs();
+          renderCourses(getFilteredCourses());
+          resultList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  }
+
   function renderCourses(courses) {
     if (loadingState) {
       loadingState.style.display = 'none';
     }
+
+    // 전체 요약 탭 (멀티데이이고 activeDay === 0일 때)
+    const totalDays = parseInt(AppState.days, 10) || 1;
+    if (totalDays > 1 && activeDay === 0 && courses.length > 0) {
+      renderOverviewTab(courses);
+      return;
+    }
+
     resultList.innerHTML = '';
 
     if (courses.length === 0) {
@@ -322,11 +419,12 @@ loadWeather();
       card.setAttribute('role', 'button');
       card.setAttribute('tabindex', '0');
       card.setAttribute('aria-label', `${course.name} 코스 상세 보기`);
+      const fallback = getCategoryFallback(course);
       card.innerHTML = `
-        <div class="course-card-thumb${thumbUrl ? '' : ' course-card-thumb--placeholder'}" style="height:${thumbUrl ? '140' : '80'}px;overflow:hidden;position:relative">
+        <div class="course-card-thumb${thumbUrl ? '' : ' course-card-thumb--placeholder'}" style="height:${thumbUrl ? '140' : '80'}px;overflow:hidden;position:relative;${thumbUrl ? '' : `background:${fallback.bg};display:flex;align-items:center;justify-content:center;`}">
           ${thumbUrl
-            ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(course.spots[0].name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease">`
-            : `<div class="course-thumb-fallback">🏖️ 부산</div>`}
+            ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(course.spots[0].name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease" onerror="this.onerror=null;const fb=this.closest('.course-card-thumb');if(fb){fb.style.background='#DBEAFE';fb.innerHTML='<div class=\\'course-thumb-fallback\\' style=\\'font-size:28px\\'>🏖️</div>';}">`
+            : `<div class="course-thumb-fallback" style="font-size:28px">${fallback.icon}</div>`}
           <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.45) 100%)"></div>
           <div style="position:absolute;bottom:8px;left:12px;display:flex;gap:6px;flex-wrap:wrap">
             <span class="badge badge-blue" style="backdrop-filter:blur(4px);background:rgba(235,240,248,0.9)">📍 ${course.spots.length}개소</span>
@@ -604,6 +702,18 @@ loadWeather();
     }
     renderCurrentFilter();
   });
+
+  // P1: 스티키 Day탭 스크롤 방향 감지
+  (function setupStickyDayTab() {
+    const bar = document.getElementById('dayTabBar');
+    if (!bar) return;
+    let lastY = 0;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      bar.style.transform = y > lastY && y > 60 ? 'translateY(-100%)' : 'translateY(0)';
+      lastY = y;
+    }, { passive: true });
+  })();
 
   init();
 })();

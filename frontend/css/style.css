@@ -1680,25 +1680,25 @@ button { font-family: inherit; }
 /* 스켈레톤 (시머 애니메이션) */
 .skeleton-card {
   background: var(--white);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
+  border-radius: 12px;
   padding: 16px;
-  display: flex; flex-direction: column; gap: 10px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 .sk {
-  border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
-.sk-title { height: 18px; width: 70%; }
-.sk-text  { height: 14px; width: 100%; }
-.sk-short { width: 50%; }
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
+  0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+.sk-img   { height: 140px; margin-bottom: 12px; }
+.sk-title { height: 20px; width: 70%; margin-bottom: 8px; }
+.sk-text  { height: 14px; width: 90%; margin-bottom: 6px; }
+.sk-short { width: 50%; }
 
 /* ── QR 코드 모달 ── */
 .qr-modal {
@@ -2216,6 +2216,172 @@ button { font-family: inherit; }
   /* 만족도 섹션 */
   .satisfaction-section { max-width: 560px; margin: 20px auto 48px; padding: 28px 32px; }
 }
+
+/* ── Overview Tab ── */
+.overview-tab { padding: 4px 0; }
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.overview-stat {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.overview-stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.overview-stat-label { font-size: 11px; color: var(--gray-500); }
+.overview-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0 0 12px;
+}
+.overview-highlights { display: flex; flex-direction: column; gap: 10px; }
+.overview-day-card {
+  display: flex;
+  gap: 12px;
+  background: var(--white);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  min-height: 48px;
+}
+.overview-day-card:active { transform: scale(0.98); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.overview-day-thumb {
+  width: 90px;
+  min-height: 90px;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.overview-day-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+.overview-day-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0,48,135,0.85);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.overview-day-info {
+  flex: 1;
+  padding: 12px 12px 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+.overview-day-name { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+.overview-day-meta { font-size: 12px; color: var(--gray-500); }
+.overview-day-spots { font-size: 12px; color: var(--gray-600); }
+.overview-cta { text-align: center; margin-top: 16px; padding-bottom: 8px; }
+.overview-cta-hint { font-size: 13px; color: var(--gray-500); }
+
+/* ── Sticky Day Tab Bar ── */
+.result-day-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  transition: transform 0.25s ease;
+}
+
+/* ── Timeline Layout (course detail) ── */
+.timeline-list { position: relative; padding-left: 28px; }
+.timeline-list::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--gray-200);
+}
+.timeline-item { position: relative; margin-bottom: 16px; }
+.timeline-dot {
+  position: absolute;
+  left: -24px;
+  top: 14px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--white);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+.timeline-connector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 4px -20px;
+  font-size: 12px;
+  color: var(--gray-500);
+}
+.timeline-connector-icon { font-size: 14px; }
+
+/* ── Bottom Sheet ── */
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.bottom-sheet-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border-radius: 16px 16px 0 0;
+  z-index: 201;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  max-height: 80vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.bottom-sheet.open { transform: translateY(0); }
+.bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--gray-300);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+.bottom-sheet-content { padding: 16px; }
 
 /* ── 인쇄 ── */
 @media print {
