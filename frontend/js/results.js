@@ -323,14 +323,16 @@ loadWeather();
       card.setAttribute('tabindex', '0');
       card.setAttribute('aria-label', `${course.name} 코스 상세 보기`);
       card.innerHTML = `
-        ${thumbUrl ? `<div class="course-card-thumb" style="height:140px;overflow:hidden;position:relative">
-          <img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(course.spots[0].name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease">
-          <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,0.4) 100%)"></div>
+        <div class="course-card-thumb${thumbUrl ? '' : ' course-card-thumb--placeholder'}" style="height:${thumbUrl ? '140' : '80'}px;overflow:hidden;position:relative">
+          ${thumbUrl
+            ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(course.spots[0].name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease">`
+            : `<div class="course-thumb-fallback">🏖️ 부산</div>`}
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.45) 100%)"></div>
           <div style="position:absolute;bottom:8px;left:12px;display:flex;gap:6px;flex-wrap:wrap">
             <span class="badge badge-blue" style="backdrop-filter:blur(4px);background:rgba(235,240,248,0.9)">📍 ${course.spots.length}개소</span>
             <span class="badge ${fatigueClass}" style="backdrop-filter:blur(4px)">피로도 ${course.total_fatigue}</span>
           </div>
-        </div>` : ''}
+        </div>
         <div class="course-card-header">
           <div class="course-card-top">
             <div class="access-grade">
