@@ -292,12 +292,12 @@ loadWeather();
       const spotsNames = course.spots.map(s => escapeHtml(s.name)).join(' → ');
       const avgGrade = course.accessibility_avg || 3;
       const gradeText = gradeLabel(Math.round(avgGrade));
-      const wheelchairStatus = course.spots.every(s => s.wheelchair_accessible === true) ? 'ok'
-        : course.spots.some(s => s.wheelchair_accessible === false) ? 'fail' : 'unknown';
-      const strollerStatus = course.spots.every(s => s.stroller_accessible === true) ? 'ok'
-        : course.spots.some(s => s.stroller_accessible === false) ? 'fail' : 'unknown';
-      const restroomStatus = course.spots.every(s => s.restroom_accessible === true) ? 'ok'
-        : course.spots.some(s => s.restroom_accessible === false) ? 'fail' : 'unknown';
+      const wheelchairStatus = course.spots.some(s => s.wheelchair_accessible === false) ? 'fail'
+        : course.spots.some(s => s.wheelchair_accessible === true) ? 'ok' : 'unknown';
+      const strollerStatus = course.spots.some(s => s.stroller_accessible === false) ? 'fail'
+        : course.spots.some(s => s.stroller_accessible === true) ? 'ok' : 'unknown';
+      const restroomStatus = course.spots.some(s => s.restroom_accessible === false) ? 'fail'
+        : course.spots.some(s => s.restroom_accessible === true) ? 'ok' : 'unknown';
       const hasElevator = course.spots.some(s => s.elevator);
       const accessChecks = [];
       const fatigueClass = course.total_fatigue <= 50 ? 'badge-green'
