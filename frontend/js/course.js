@@ -262,10 +262,19 @@
     let nextInfo = '';
     if (!isLast) {
       const leg = legs[idx] || estimateLeg(spot, spots[idx + 1]);
+      const distKm = leg.route_distance_km || (leg.recommended_distance_m / 1000).toFixed(1);
+      // 추천 수단(이동약자 유형 기반)을 강조하고, 모든 수단의 소요 시간을 함께 공개해
+      // 사용자가 자신의 체력·동행에 맞춰 다른 수단을 선택할 수 있도록 투명하게 표기한다.
       nextInfo = `
         <div class="tl-time-to-next">
-          <span class="ico">${transportEmoji(leg.recommended_mode)}</span>
-          다음까지 약 ${leg.route_distance_km || (leg.recommended_distance_m/1000).toFixed(1)}km · ${leg.recommended_label} ${leg.recommended_time_min}분
+          <div class="tl-time-main">
+            <span class="ico" aria-hidden="true">${transportEmoji(leg.recommended_mode)}</span>
+            다음까지 약 ${distKm}km · <strong>${escapeHtml(leg.recommended_label)} ${leg.recommended_time_min}분</strong>
+            <span class="tl-time-main-hint">(추천)</span>
+          </div>
+          <div class="tl-time-alt">
+            대체 수단 · 🚶 도보 ${leg.walk_time_min}분 · 🚌 대중교통 ${leg.transit_time_min}분 · 🚗 차량 ${leg.car_time_min}분
+          </div>
         </div>`;
     }
 
@@ -616,11 +625,14 @@
     modal.className = 'spot-modal';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-label', `${spot.name} 상세 정보`);
+    // 안전한 URL만 허용 (http/https/상대경로) — javascript: 등 차단
+    const safeImageUrl = _safeUrl(spot.image_url);
+    const safePlaceUrl = _safeUrl(spot.place_url);
     modal.innerHTML = `
       <div class="spot-modal-inner">
-        <button class="spot-modal-close" onclick="document.getElementById('spotModal').remove()" aria-label="닫기">✕</button>
-        ${spot.image_url ? `<div style="margin:-28px -20px 16px;height:180px;overflow:hidden;border-radius:var(--radius-xl) var(--radius-xl) 0 0">
-          <img src="${spot.image_url}" alt="${spot.name}" style="width:100%;height:100%;object-fit:cover">
+        <button class="spot-modal-close" id="spotModalClose" aria-label="닫기">✕</button>
+        ${safeImageUrl ? `<div style="margin:-28px -20px 16px;height:180px;overflow:hidden;border-radius:var(--radius-xl) var(--radius-xl) 0 0">
+          <img src="${escapeHtml(safeImageUrl)}" alt="${escapeHtml(spot.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.onerror=null;this.style.display='none';">
         </div>` : ''}
         <h3>${escapeHtml(spot.name)}</h3>
         <div class="spot-modal-category">${escapeHtml(spot.category)} · ${escapeHtml(spot.area)}</div>
@@ -637,14 +649,77 @@
           ${spot.restroom_accessible === true ? '<span class="chip ok">🚻 화장실 OK</span>' : spot.restroom_accessible === false ? '<span class="chip warn">🚻 화장실 제한</span>' : '<span class="chip unknown">🚻 화장실 미확인</span>'}
           ${spot._custom               ? '<span class="chip" style="background:#fff3cd;color:#856404">✏️ 직접 추가</span>' : ''}
         </div>
-        ${spot.place_url ? `<a href="${spot.place_url}" target="_blank" rel="noopener" style="display:block;margin-top:12px;font-size:13px;color:var(--primary);text-decoration:none">카카오맵에서 보기 →</a>` : ''}
+        ${safePlaceUrl ? `<a href="${escapeHtml(safePlaceUrl)}" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:12px;font-size:13px;color:var(--primary);text-decoration:none">카카오맵에서 보기 →</a>` : ''}
         <div class="spot-modal-grade">
           접근성 등급: <strong>${gradeLabel(spot.accessibility_grade||3)}</strong>
           (${spot.accessibility_grade||3}/5점)
         </div>
+        <div id="spotDetailExtra" style="margin-top:14px"></div>
       </div>`;
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     document.body.appendChild(modal);
+    document.getElementById('spotModalClose')?.addEventListener('click', () => modal.remove());
+
+    // TourAPI detailCommon2/Intro2/Image2 lazy 로드 — spot.id 가 tour_* 형식일 때만
+    loadSpotDetail(spot);
+  }
+
+  // ── 안전한 URL 허용 목록 ──────────────────────────────────────────
+  function _safeUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+    // 허용: http/https 절대경로 + / 로 시작하는 상대경로
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    if (trimmed.startsWith('/')) return trimmed;
+    return '';
+  }
+
+  async function loadSpotDetail(spot) {
+    const container = document.getElementById('spotDetailExtra');
+    if (!container) return;
+    // 현장 제보 수는 TourAPI 여부와 무관하게 조회 가능
+    const reportsPromise = fetch(`/api/reports/${encodeURIComponent(spot.id)}`)
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => []);
+
+    const m = /^tour_(\d+)$/.exec(spot.id || '');
+    let detailPromise = Promise.resolve(null);
+    if (m) {
+      const contentId = m[1];
+      detailPromise = fetch(`/api/spot-detail/${encodeURIComponent(contentId)}`)
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null);
+    }
+
+    const [d, reports] = await Promise.all([detailPromise, reportsPromise]);
+
+    const rows = [];
+    if (d) {
+      if (d.usetime) rows.push(`<div>🕘 <strong>운영</strong> ${escapeHtml(d.usetime)}</div>`);
+      if (d.restdate) rows.push(`<div>📅 <strong>휴무</strong> ${escapeHtml(d.restdate)}</div>`);
+      if (d.parking) rows.push(`<div>🅿️ <strong>주차</strong> ${escapeHtml(d.parking)}</div>`);
+      if (d.tel) rows.push(`<div>📞 <strong>전화</strong> ${escapeHtml(d.tel)}</div>`);
+      const safeHome = _safeUrl(d.homepage);
+      if (safeHome) rows.push(`<div>🔗 <a href="${escapeHtml(safeHome)}" target="_blank" rel="noopener noreferrer">홈페이지</a></div>`);
+    }
+
+    const reportsCount = Array.isArray(reports) ? reports.length : 0;
+    const reportsBanner = reportsCount > 0
+      ? `<div style="margin-top:10px;padding:8px 10px;background:#FEF3C7;border-left:3px solid #F59E0B;border-radius:6px;font-size:12.5px;color:#78350F">⚑ 현장 제보 ${reportsCount}건 — 방문 전 최근 접근성 상황을 확인해 주세요</div>`
+      : '';
+
+    const gallery = d && Array.isArray(d.images) ? d.images.slice(0, 6).filter(_safeUrl) : [];
+    const galleryHtml = gallery.length
+      ? `<div style="display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:4px">${gallery.map(u => `<img src="${escapeHtml(u)}" alt="추가 이미지" loading="lazy" style="height:80px;border-radius:6px;flex:0 0 auto" onerror="this.onerror=null;this.style.display='none';">`).join('')}</div>`
+      : '';
+
+    if (rows.length || galleryHtml || reportsBanner) {
+      const rowsHtml = rows.length
+        ? `<div style="display:grid;gap:4px;font-size:13px;color:var(--gray-600);line-height:1.5">${rows.join('')}</div>`
+        : '';
+      container.innerHTML = rowsHtml + reportsBanner + galleryHtml;
+    }
   }
 
   // ── 현장 접근성 신고 모달 ─────────────────────────────────────────

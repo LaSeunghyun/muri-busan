@@ -46,10 +46,16 @@ self.addEventListener('fetch', e => {
       })
     );
   } else if (url.pathname.startsWith('/api/')) {
-    // Network First for API
+    // Network First for API — 오프라인 시 사용자 친화 메시지 제공
     e.respondWith(
       fetch(e.request).catch(() =>
-        new Response('{"error":"offline"}', { headers: { 'Content-Type': 'application/json' } })
+        new Response(
+          JSON.stringify({
+            error: 'offline',
+            detail: '네트워크에 연결되어 있지 않습니다. 저장된 코스 정보는 계속 볼 수 있어요.',
+          }),
+          { status: 503, headers: { 'Content-Type': 'application/json; charset=utf-8' } }
+        )
       )
     );
   } else if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.html')) {

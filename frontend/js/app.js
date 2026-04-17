@@ -251,6 +251,26 @@ function renderAccessDots(grade, max = 5) {
   return html;
 }
 
+/* ── 공통 푸터 (개인정보 고지 + 데이터 출처) ── */
+function renderAppFooter() {
+  if (document.querySelector('.app-footer')) return;
+  const footer = document.createElement('footer');
+  footer.className = 'app-footer';
+  footer.setAttribute('role', 'contentinfo');
+  footer.innerHTML = `
+    <div class="app-footer-inner">
+      <p class="app-footer-copy">© 무리없이 부산 · 이동약자 맞춤 부산 관광 코스 추천</p>
+      <p class="app-footer-notice">추천 품질 개선을 위해 익명 세션 식별자 기반 사용 통계(코스 열람·만족도 응답)를 수집합니다. 성명·연락처 등 개인식별정보는 수집하지 않으며, 만족도 자유 입력란의 내용은 서비스 개선 목적으로만 활용합니다.</p>
+      <p class="app-footer-data">데이터 출처: 한국관광공사 TourAPI(KorService2·무장애 여행 정보) · 기상청 단기예보 · 카카오 지도 SDK · OpenStreetMap(OSRM)</p>
+    </div>`;
+  document.body.appendChild(footer);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderAppFooter);
+} else {
+  renderAppFooter();
+}
+
 /* ── 즐겨찾기 ── */
 const AppFavorites = {
   get list() { return _lsGet('mb_favorites', []); },

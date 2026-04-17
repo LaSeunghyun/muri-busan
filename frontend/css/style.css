@@ -2383,9 +2383,36 @@ button { font-family: inherit; }
 }
 .bottom-sheet-content { padding: 16px; }
 
+/* ── 타임라인 이동 시간 보조 표기 ── */
+.tl-time-to-next .tl-time-main { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.tl-time-to-next .tl-time-main-hint {
+  font-size: 11px; color: var(--gray-400, #9ca3af); font-weight: 500;
+}
+.tl-time-to-next .tl-time-alt {
+  font-size: 11.5px; color: var(--gray-500, #6b7280); margin-top: 3px; line-height: 1.5;
+}
+
+/* ── 공통 푸터 (개인정보 고지·데이터 출처) ── */
+.app-footer {
+  margin-top: 40px;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  background: var(--gray-50, #f7f8fa);
+  border-top: 1px solid var(--gray-100, #eceef2);
+  color: var(--gray-500, #6b7280);
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+.app-footer-inner { max-width: 960px; margin: 0 auto; }
+.app-footer-copy { font-weight: 600; color: var(--gray-700, #374151); margin: 0 0 6px; }
+.app-footer-notice { margin: 0 0 6px; }
+.app-footer-data { margin: 0; color: var(--gray-400, #9ca3af); }
+@media (min-width: 768px) {
+  .app-footer { font-size: 12.5px; padding: 28px 24px; }
+}
+
 /* ── 인쇄 ── */
 @media print {
   .gnb, .app-header, .progress-bar, .btn-primary, .btn-outline,
-  .share-btns, .detail-bottom { display: none !important; }
+  .share-btns, .detail-bottom, .app-footer { display: none !important; }
   .course-card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
 }

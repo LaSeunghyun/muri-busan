@@ -21,30 +21,11 @@ _MODEL_CANDIDATES = [
 _MODEL_NAME = _MODEL_CANDIDATES[0]
 _client = None
 
-# Supabase 클라이언트 (lazy init)
-_supabase_client = None
-_supabase_init_failed = False
-
-
 def _get_supabase():
-    """Supabase 클라이언트 lazy init. 실패 시 None 반환 → 파일 캐시 fallback."""
-    global _supabase_client, _supabase_init_failed
-    if _supabase_client is not None or _supabase_init_failed:
-        return _supabase_client
-    url = os.getenv("SUPABASE_URL", "").strip()
-    key = os.getenv("SUPABASE_ANON_KEY", "").strip()
-    if not url or not key:
-        _supabase_init_failed = True
-        return None
-    try:
-        from supabase import create_client
-        _supabase_client = create_client(url, key)
-        logger.info("Supabase 캐시 클라이언트 초기화 완료")
-    except Exception as e:
-        logger.warning("Supabase 초기화 실패, 파일 캐시 fallback: %s", e)
-        _supabase_init_failed = True
-        _supabase_client = None
-    return _supabase_client
+    """Supabase 클라이언트 접근 — services/supabase_client 싱글톤에 위임한다.
+    환경변수 미설정·초기화 실패 시 None 반환 → 파일 캐시 fallback."""
+    from backend.services.supabase_client import get_client
+    return get_client()
 
 # Gemini 호출 간격 제한 (동시 요청 방어)
 _gemini_lock = asyncio.Lock()

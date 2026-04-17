@@ -28,7 +28,7 @@ CARRIER_MAX_SLOPE_PCT = 5.0
 MODE_LABELS = {"walk": "도보", "transit": "대중교통", "car": "차량"}
 
 MAX_DAILY_MINUTES = 300       # 5시간 — UI "5h 하루 이내 저피로" 카피와 일치
-MAX_DAILY_FATIGUE = 250.0     # 기존 100 → 가중치 하향에 맞춰 재설정
+MAX_DAILY_FATIGUE = 150.0     # 실제 필터로 작동하도록 재튜닝 (하루 중간 피로도 + 경사·대기 반영 시 150 근처 도달)
 CATEGORY_REPEAT_PENALTY_M = 700.0
 AREA_REPEAT_PENALTY_M = 250.0
 NUM_ALTERNATIVES = 3  # 하루 당 대안 코스 수

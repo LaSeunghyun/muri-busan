@@ -301,6 +301,266 @@ def _convert_festivals(items: list[dict], start_date: str) -> list[dict]:
     return result
 
 
+# ── 상세 정보 (detailCommon2 + detailIntro2 + detailImage2) ──────────
+_detail_cache: dict = {}
+DETAIL_CACHE_TTL = 3600
+
+
+async def _fetch_detail_common(client: httpx.AsyncClient, content_id: str) -> dict:
+    """detailCommon2 — 공통 정보(주소·개요·전화·홈페이지)."""
+    ek = _encoded_key()
+    params = urlencode({
+        "MobileOS": "ETC", "MobileApp": "MurieopsBusan", "_type": "json",
+        "contentId": content_id,
+        "numOfRows": "1", "pageNo": "1",
+    })
+    url = f"{TOUR_API_BASE}/detailCommon2?serviceKey={ek}&{params}"
+    try:
+        r = await client.get(url, timeout=8.0)
+        items = r.json()["response"]["body"]["items"]
+        if not items:
+            return {}
+        item = items.get("item", [])
+        item = item[0] if isinstance(item, list) and item else item if isinstance(item, dict) else {}
+        return {
+            "overview": (item.get("overview") or "").strip(),
+            "homepage": (item.get("homepage") or "").strip(),
+            "tel": (item.get("tel") or "").strip(),
+            "addr": (item.get("addr1") or "").strip(),
+        }
+    except Exception as e:
+        logger.warning("detailCommon2 실패 (contentid=%s): %s", content_id, e)
+        return {}
+
+
+async def _fetch_detail_intro(client: httpx.AsyncClient, content_id: str, content_type_id: str = "12") -> dict:
+    """detailIntro2 — 유형별 소개 정보(운영시간·휴일·주차·입장료)."""
+    ek = _encoded_key()
+    params = urlencode({
+        "MobileOS": "ETC", "MobileApp": "MurieopsBusan", "_type": "json",
+        "contentId": content_id, "contentTypeId": content_type_id,
+        "numOfRows": "1", "pageNo": "1",
+    })
+    url = f"{TOUR_API_BASE}/detailIntro2?serviceKey={ek}&{params}"
+    try:
+        r = await client.get(url, timeout=8.0)
+        items = r.json()["response"]["body"]["items"]
+        if not items:
+            return {}
+        item = items.get("item", [])
+        item = item[0] if isinstance(item, list) and item else item if isinstance(item, dict) else {}
+        return {
+            "usetime": (item.get("usetime") or "").strip(),
+            "restdate": (item.get("restdate") or "").strip(),
+            "parking": (item.get("parking") or "").strip(),
+            "chkpet": (item.get("chkpet") or "").strip(),
+        }
+    except Exception as e:
+        logger.warning("detailIntro2 실패 (contentid=%s): %s", content_id, e)
+        return {}
+
+
+async def _fetch_detail_images(client: httpx.AsyncClient, content_id: str) -> list[str]:
+    """detailImage2 — 추가 이미지 갤러리."""
+    ek = _encoded_key()
+    params = urlencode({
+        "MobileOS": "ETC", "MobileApp": "MurieopsBusan", "_type": "json",
+        "contentId": content_id, "imageYN": "Y",
+        "numOfRows": "10", "pageNo": "1",
+    })
+    url = f"{TOUR_API_BASE}/detailImage2?serviceKey={ek}&{params}"
+    try:
+        r = await client.get(url, timeout=8.0)
+        items = r.json()["response"]["body"]["items"]
+        if not items:
+            return []
+        item_list = items.get("item", [])
+        if isinstance(item_list, dict):
+            item_list = [item_list]
+        return [it.get("originimgurl") for it in item_list if it.get("originimgurl")]
+    except Exception as e:
+        logger.warning("detailImage2 실패 (contentid=%s): %s", content_id, e)
+        return []
+
+
+async def fetch_spot_detail(content_id: str, content_type_id: str = "12") -> dict:
+    """detailCommon2 + detailIntro2 + detailImage2 병렬 호출 후 병합 반환."""
+    if not TOUR_API_KEY or not content_id:
+        return {}
+    cache_key = f"detail_{content_id}"
+    cached = _detail_cache.get(cache_key)
+    if cached and time.time() - cached[0] < DETAIL_CACHE_TTL:
+        return cached[1]
+
+    async with httpx.AsyncClient() as client:
+        common, intro, images = await asyncio.gather(
+            _fetch_detail_common(client, content_id),
+            _fetch_detail_intro(client, content_id, content_type_id),
+            _fetch_detail_images(client, content_id),
+            return_exceptions=True,
+        )
+    result = {}
+    if isinstance(common, dict):
+        result.update(common)
+    if isinstance(intro, dict):
+        result.update(intro)
+    if isinstance(images, list):
+        result["images"] = images
+    _detail_cache[cache_key] = (time.time(), result)
+    return result
+
+
+# ── 숙박 조회 (searchStay2) ──────────────────────────────────────────
+_stay_cache: dict = {}
+STAY_CACHE_TTL = 3600
+
+
+async def fetch_stays(area: str | None = None) -> list[dict]:
+    """searchStay2 — 부산 지역 숙박 후보 조회 (1박 이상 코스용)."""
+    if not TOUR_API_KEY:
+        return []
+    cache_key = f"stay_{area or 'all'}"
+    cached = _stay_cache.get(cache_key)
+    if cached and time.time() - cached[0] < STAY_CACHE_TTL:
+        return cached[1]
+    try:
+        ek = _encoded_key()
+        params = urlencode({
+            "numOfRows": "30", "pageNo": "1",
+            "MobileOS": "ETC", "MobileApp": "MurieopsBusan", "_type": "json",
+            "areaCode": "6",
+        })
+        url = f"{TOUR_API_BASE}/searchStay2?serviceKey={ek}&{params}"
+        async with httpx.AsyncClient(timeout=10.0) as c:
+            r = await c.get(url)
+            r.raise_for_status()
+            body = r.json()["response"]["body"]
+            items = body.get("items") or {}
+            item_list = items.get("item", []) if items else []
+            if isinstance(item_list, dict):
+                item_list = [item_list]
+        stays = _convert_stays(item_list)
+        if area:
+            stays = [s for s in stays if s["area"] == area]
+        _stay_cache[cache_key] = (time.time(), stays)
+        return stays
+    except Exception as e:
+        logger.warning("searchStay2 조회 실패: %s", e)
+        return []
+
+
+def _convert_stays(items: list[dict]) -> list[dict]:
+    result = []
+    for item in items:
+        addr = item.get("addr1", "")
+        area = _infer_area(addr)
+        result.append({
+            "id": f"stay_{item.get('contentid', '')}",
+            "name": item.get("title", ""),
+            "area": area,
+            "lat": float(item.get("mapy", 35.1796)),
+            "lng": float(item.get("mapx", 129.0756)),
+            "category": "숙박",
+            "visit_time_min": 0,  # 숙박은 체류 시간 계산에서 제외
+            "slope_pct": 1.0,
+            "wait_time_min": 0,
+            "wheelchair_accessible": None,
+            "stroller_accessible": None,
+            "elevator": False,
+            "restroom_accessible": None,
+            "accessibility_grade": 3,
+            "description": addr,
+            "image_url": item.get("firstimage") or None,
+            "tags": ["숙박"],
+            "_stay": True,
+        })
+    return result
+
+
+# ── 지역·분류 코드 (areaCode2, categoryCode2) ────────────────────────
+_area_code_cache: dict[str, list[dict]] = {}
+_category_code_cache: dict[str, list[dict]] = {}
+CODE_CACHE_TTL = 86400  # 24시간 — 변동이 거의 없음
+
+
+async def fetch_area_codes(area_code: str = "6") -> list[dict]:
+    """areaCode2 — 지정 areaCode 하위의 시군구 코드 목록 조회.
+    기본 6 = 부산광역시. 반환: [{"code": "1", "name": "강서구"}, ...]
+    """
+    if not TOUR_API_KEY:
+        return []
+    cache_key = f"area_{area_code}"
+    cached = _area_code_cache.get(cache_key)
+    if cached is not None:
+        return cached
+    try:
+        ek = _encoded_key()
+        params = urlencode({
+            "numOfRows": "50", "pageNo": "1",
+            "MobileOS": "ETC", "MobileApp": "MurieopsBusan", "_type": "json",
+            "areaCode": area_code,
+        })
+        url = f"{TOUR_API_BASE}/areaCode2?serviceKey={ek}&{params}"
+        async with httpx.AsyncClient(timeout=10.0) as c:
+            r = await c.get(url)
+            r.raise_for_status()
+            body = r.json()["response"]["body"]
+            items = body.get("items") or {}
+            item_list = items.get("item", []) if items else []
+            if isinstance(item_list, dict):
+                item_list = [item_list]
+        codes = [
+            {"code": str(it.get("code", "")), "name": it.get("name", "")}
+            for it in item_list
+            if it.get("name")
+        ]
+        _area_code_cache[cache_key] = codes
+        return codes
+    except Exception as e:
+        logger.warning("areaCode2 조회 실패 (areaCode=%s): %s", area_code, e)
+        return []
+
+
+async def fetch_category_codes(cat1: str = "", cat2: str = "") -> list[dict]:
+    """categoryCode2 — 관광 유형 분류 코드. cat1/cat2 미지정 시 최상위(cat1) 조회."""
+    if not TOUR_API_KEY:
+        return []
+    cache_key = f"cat_{cat1 or 'root'}_{cat2 or ''}"
+    cached = _category_code_cache.get(cache_key)
+    if cached is not None:
+        return cached
+    try:
+        ek = _encoded_key()
+        query = {
+            "numOfRows": "100", "pageNo": "1",
+            "MobileOS": "ETC", "MobileApp": "MurieopsBusan", "_type": "json",
+        }
+        if cat1:
+            query["cat1"] = cat1
+        if cat2:
+            query["cat2"] = cat2
+        params = urlencode(query)
+        url = f"{TOUR_API_BASE}/categoryCode2?serviceKey={ek}&{params}"
+        async with httpx.AsyncClient(timeout=10.0) as c:
+            r = await c.get(url)
+            r.raise_for_status()
+            body = r.json()["response"]["body"]
+            items = body.get("items") or {}
+            item_list = items.get("item", []) if items else []
+            if isinstance(item_list, dict):
+                item_list = [item_list]
+        codes = [
+            {"code": str(it.get("code", "")), "name": it.get("name", "")}
+            for it in item_list
+            if it.get("name")
+        ]
+        _category_code_cache[cache_key] = codes
+        return codes
+    except Exception as e:
+        logger.warning("categoryCode2 조회 실패 (cat1=%s cat2=%s): %s", cat1, cat2, e)
+        return []
+
+
 def _infer_area(addr: str) -> str:
     for k, v in [
         # 구·군 단위 (구체적인 것 먼저)

@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 from backend.services.algorithm import recommend_courses
-from backend.services.tourapi import fetch_spots, fetch_festivals
+from backend.services.tourapi import fetch_spots, fetch_festivals, fetch_stays
 from backend.services.gemini import enrich_courses
 from backend.routers.courses import cache_courses
 from backend.routers.weather import fetch_weather_status
@@ -37,6 +37,14 @@ async def recommend(req: RecommendRequest):
         fetch_festivals(req.start_date),
         fetch_weather_status(req.start_date),
     )
+
+    # 1박 이상 코스일 때만 숙박 후보 조회 (API 호출량 절감)
+    stays: list[dict] = []
+    if req.days >= 2:
+        stays = await fetch_stays()
+        if req.areas:
+            stays = [s for s in stays if s.get("area") in req.areas]
+        stays = stays[:5]
 
     # 행사/축제 데이터 병합
     if festivals:
@@ -101,5 +109,6 @@ async def recommend(req: RecommendRequest):
             "message": message,
             "ai_enabled": ai_enabled,
             "weather": weather,
+            "stay_candidates": stays,
         },
     }

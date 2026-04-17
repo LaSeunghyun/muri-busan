@@ -60,10 +60,10 @@ def init_report_db() -> None:
 
 
 class ReportRequest(BaseModel):
-    spot_id: str
-    spot_name: str
+    spot_id: str = Field(..., min_length=1, max_length=64)
+    spot_name: str = Field(..., min_length=1, max_length=200)
     issue_type: str = Field(..., description="barrier_added|elevator_broken|restroom_closed|accessible|other")
-    description: str = ""
+    description: str = Field(default="", max_length=500)
     lat: Optional[float] = Field(default=None, ge=-90, le=90)
     lng: Optional[float] = Field(default=None, ge=-180, le=180)
 

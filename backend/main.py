@@ -22,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from backend.routers import analytics, courses, recommend, report, search, share, weather
+from backend.routers import analytics, courses, meta, recommend, report, search, share, spot_detail, weather
 
 
 _REQUIRED_ENV_VARS = ["TOUR_API_KEY", "GEMINI_API_KEY"]
@@ -34,10 +34,30 @@ async def lifespan(app: FastAPI):
     if missing:
         for k in missing:
             logger.error("필수 환경변수 누락: %s — .env 파일 또는 배포 환경을 확인하세요.", k)
-        sys.exit(1)
+        # lifespan 내부에서 sys.exit()는 비정상 종료를 유발하므로 RuntimeError로 전환
+        raise RuntimeError(f"필수 환경변수 누락: {', '.join(missing)}")
     share.init_share_db()
     share.cleanup_expired_shares()
     report.init_report_db()
+    # 만료된 코스 캐시 정리
+    from backend.store import course_store
+    course_store.cleanup_expired()
+
+    # TourAPI areaCode2/categoryCode2 1회 예열 (실패해도 서비스는 정상 구동)
+    import asyncio as _asyncio
+    from backend.services.tourapi import fetch_area_codes, fetch_category_codes
+    try:
+        area_codes, category_codes = await _asyncio.gather(
+            fetch_area_codes("6"),
+            fetch_category_codes(),
+            return_exceptions=True,
+        )
+        area_count = len(area_codes) if isinstance(area_codes, list) else 0
+        cat_count = len(category_codes) if isinstance(category_codes, list) else 0
+        logger.info("메타 코드 예열: 부산 시군구 %d개 · 관광 분류 %d개", area_count, cat_count)
+    except Exception as e:
+        logger.warning("메타 코드 예열 실패: %s", e)
+
     logger.info("앱 시작 완료")
     yield
 
@@ -65,9 +85,38 @@ _origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept"],
 )
+
+
+# ── 보안 헤더 미들웨어 ──────────────────────────────────────────────
+# CSP: Kakao Map SDK·Google Fonts·QR CDN·Unsplash/TourAPI 이미지 허용
+# inline script/style이 다수 존재하여 'unsafe-inline'은 유지, eval은 차단
+_CSP_POLICY = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://dapi.kakao.com https://t1.daumcdn.net "
+    "https://cdnjs.cloudflare.com https://developers.kakao.com; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src 'self' https://fonts.gstatic.com data:; "
+    "img-src 'self' data: blob: https:; "
+    "connect-src 'self' https://apis.data.go.kr https://dapi.kakao.com "
+    "https://router.project-osrm.org https://*.supabase.co https://generativelanguage.googleapis.com; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'"
+)
+
+
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("Content-Security-Policy", _CSP_POLICY)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "geolocation=(self), microphone=()")
+    return response
 
 # ── Rate Limiting (경량 미들웨어) ──────────────────────────────────
 # 경로별 제한: (최대 요청 수, 윈도우 초)
@@ -78,10 +127,28 @@ _RATE_LIMITS: dict[str, tuple[int, int]] = {
     "/api/log/survey": (10, 60),     # IP당 분당 10회 (같은 세션이 여러번 제출 방지)
 }
 _rate_buckets: dict[str, list[float]] = defaultdict(list)
+# 주기적 전체 청소용 카운터 (빈 bucket이 무제한으로 쌓이는 것 방지)
+_rate_gc_counter = 0
+_RATE_GC_INTERVAL = 500  # 요청 500회마다 만료 bucket 전수 청소
+
+
+def _gc_rate_buckets(now: float) -> None:
+    """모든 bucket을 훑어 최신 윈도우보다 오래된 타임스탬프만 남기고, 비어 있으면 삭제."""
+    max_window = max(window for _, window in _RATE_LIMITS.values())
+    stale_keys = []
+    for key, timestamps in _rate_buckets.items():
+        fresh = [t for t in timestamps if now - t < max_window]
+        if fresh:
+            _rate_buckets[key] = fresh
+        else:
+            stale_keys.append(key)
+    for key in stale_keys:
+        _rate_buckets.pop(key, None)
 
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
+    global _rate_gc_counter
     path = request.url.path
     limit_config = _RATE_LIMITS.get(path)
     if limit_config and request.method == "POST":
@@ -90,18 +157,25 @@ async def rate_limit_middleware(request: Request, call_next):
         bucket_key = f"{client_ip}:{path}"
         now = time.time()
 
-        # 만료된 항목 제거
-        _rate_buckets[bucket_key] = [
-            t for t in _rate_buckets[bucket_key] if now - t < window_sec
-        ]
+        # 주기적 전체 청소 — 비활성 IP의 빈 bucket을 제거해 메모리 누수 방지
+        _rate_gc_counter += 1
+        if _rate_gc_counter >= _RATE_GC_INTERVAL:
+            _rate_gc_counter = 0
+            _gc_rate_buckets(now)
 
-        if len(_rate_buckets[bucket_key]) >= max_requests:
+        # 해당 bucket의 만료 타임스탬프 제거
+        fresh = [t for t in _rate_buckets.get(bucket_key, []) if now - t < window_sec]
+
+        if len(fresh) >= max_requests:
             logger.warning("Rate limit 초과: %s %s", client_ip, path)
+            # 카운트만 갱신하고 새 요청은 기록하지 않음 (메모리 증가 방지)
+            _rate_buckets[bucket_key] = fresh
             return JSONResponse(
                 status_code=429,
                 content={"detail": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."},
             )
-        _rate_buckets[bucket_key].append(now)
+        fresh.append(now)
+        _rate_buckets[bucket_key] = fresh
 
     return await call_next(request)
 
@@ -112,6 +186,8 @@ app.include_router(courses.router)
 app.include_router(share.router)
 app.include_router(weather.router)
 app.include_router(search.router)
+app.include_router(spot_detail.router)
+app.include_router(meta.router)
 app.include_router(report.router)
 app.include_router(analytics.router)
 

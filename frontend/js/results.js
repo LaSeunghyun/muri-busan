@@ -314,9 +314,9 @@ loadWeather();
             const fb = getCategoryFallback(course);
             return `
             <div class="overview-day-card" data-course-id="${course.id}">
-              <div class="overview-day-thumb" style="background:${thumb ? 'transparent' : fb.bg}">
+              <div class="overview-day-thumb" data-fb-bg="${escapeHtml(fb.bg)}" data-fb-icon="${escapeHtml(fb.icon)}" style="background:${thumb ? 'transparent' : fb.bg}">
                 ${thumb
-                  ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(course.spots[0].name)}" loading="lazy" onerror="this.onerror=null;this.parentElement.style.background='${fb.bg}';this.remove();">`
+                  ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(course.spots[0].name)}" loading="lazy" onerror="this.onerror=null;const p=this.parentElement;if(p){p.style.background=p.dataset.fbBg;p.innerHTML='<span style=&quot;font-size:32px&quot;>'+p.dataset.fbIcon+'</span>';}">`
                   : `<span style="font-size:32px">${fb.icon}</span>`}
                 <div class="overview-day-badge">Day ${day}</div>
               </div>
@@ -421,9 +421,9 @@ loadWeather();
       card.setAttribute('aria-label', `${course.name} 코스 상세 보기`);
       const fallback = getCategoryFallback(course);
       card.innerHTML = `
-        <div class="course-card-thumb${thumbUrl ? '' : ' course-card-thumb--placeholder'}" style="height:${thumbUrl ? '140' : '80'}px;overflow:hidden;position:relative;${thumbUrl ? '' : `background:${fallback.bg};display:flex;align-items:center;justify-content:center;`}">
+        <div class="course-card-thumb${thumbUrl ? '' : ' course-card-thumb--placeholder'}" data-fb-bg="${escapeHtml(fallback.bg)}" data-fb-icon="${escapeHtml(fallback.icon)}" style="height:${thumbUrl ? '140' : '80'}px;overflow:hidden;position:relative;${thumbUrl ? '' : `background:${fallback.bg};display:flex;align-items:center;justify-content:center;`}">
           ${thumbUrl
-            ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(course.spots[0].name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease" onerror="this.onerror=null;const fb=this.closest('.course-card-thumb');if(fb){fb.style.background='#DBEAFE';fb.innerHTML='<div class=\\'course-thumb-fallback\\' style=\\'font-size:28px\\'>🏖️</div>';}">`
+            ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(course.spots[0].name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease" onerror="this.onerror=null;const fb=this.closest('.course-card-thumb');if(fb){fb.style.background=fb.dataset.fbBg;fb.innerHTML='<div class=&quot;course-thumb-fallback&quot; style=&quot;font-size:28px&quot;>'+fb.dataset.fbIcon+'</div>';}">`
             : `<div class="course-thumb-fallback" style="font-size:28px">${fallback.icon}</div>`}
           <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,0.45) 100%)"></div>
           <div style="position:absolute;bottom:8px;left:12px;display:flex;gap:6px;flex-wrap:wrap">
