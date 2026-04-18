@@ -63,6 +63,12 @@
     </nav>
   </div>
 
+  <!-- 추천 코스 지도 개요 (모든 코스 스팟을 한 번에 표시) -->
+  <section class="result-map-wrap" id="resultMapWrap" style="display:none" aria-label="추천 코스 지도 개요">
+    <div class="result-map" id="resultMap"></div>
+    <div class="result-map-legend" id="resultMapLegend"></div>
+  </section>
+
   <!-- 결과 목록 -->
   <section class="result-list" id="resultList" aria-label="코스 목록" aria-live="polite">
     <div class="loading-overlay" id="loadingState">
@@ -146,6 +152,7 @@
   </section>
 </div>
 
+<script src="/runtime-config.js"></script>
 <script src="/js/app.js"></script>
 <script src="/js/results.js"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
