@@ -24,6 +24,188 @@ loadWeather();
   const dayTabs = document.getElementById('dayTabs');
   const dayTabBar = document.getElementById('dayTabBar');
   const loadingState = document.getElementById('loadingState');
+  const resultMapWrap = document.getElementById('resultMapWrap');
+  const resultMapEl = document.getElementById('resultMap');
+  const resultMapLegend = document.getElementById('resultMapLegend');
+
+  // Day 별 마커 색상 (activeDay=0 전체 보기에서 day 구분)
+  const DAY_COLORS = {
+    1: '#003087', 2: '#B45309', 3: '#059669', 4: '#7C3AED', 5: '#DB2777',
+  };
+
+  // ── Kakao SDK 로더 (results 페이지 지도용) ────────────────────
+  let _kakaoLoader = null;
+  function loadKakaoSdk() {
+    if (window.kakao && window.kakao.maps && window.kakao.maps.LatLng) {
+      return Promise.resolve(window.kakao);
+    }
+    if (_kakaoLoader) return _kakaoLoader;
+    if (!window.KAKAO_MAP_KEY) return Promise.reject(new Error('KAKAO_MAP_KEY missing'));
+    _kakaoLoader = new Promise(function (resolve, reject) {
+      const existing = document.getElementById('kakao-map-sdk');
+      const finish = function () {
+        if (!window.kakao) { _kakaoLoader = null; return reject(new Error('kakao not ready')); }
+        window.kakao.maps.load(function () { resolve(window.kakao); });
+      };
+      if (existing) {
+        if (window.kakao) { finish(); return; }
+        existing.addEventListener('load', finish, { once: true });
+        existing.addEventListener('error', function (e) { _kakaoLoader = null; reject(e); }, { once: true });
+        setTimeout(function () { if (window.kakao) finish(); }, 200);
+        return;
+      }
+      const s = document.createElement('script');
+      s.id = 'kakao-map-sdk';
+      s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + window.KAKAO_MAP_KEY +
+              '&autoload=false&libraries=services';
+      s.onload = finish;
+      s.onerror = function (e) { _kakaoLoader = null; reject(e); };
+      document.head.appendChild(s);
+    });
+    return _kakaoLoader;
+  }
+
+  function collectSpotsForMap(courses) {
+    const out = [];
+    courses.forEach(function (c) {
+      (c.spots || []).forEach(function (s) {
+        if (typeof s.lat === 'number' && typeof s.lng === 'number') {
+          out.push({
+            lat: s.lat, lng: s.lng, name: s.name,
+            day: c.day || 1, courseId: c.id, courseName: c.name,
+          });
+        }
+      });
+    });
+    return out;
+  }
+
+  // Map/overlay 인스턴스를 재활용해 메모리 누수와 중복 렌더를 방지한다.
+  let _resultMap = null;
+  let _resultMapOverlays = [];
+  let _resultMapMarkers = [];
+  let _resultRenderSeq = 0;
+  const _renderedMarkerListeners = [];
+
+  function clearResultMapOverlays() {
+    _resultMapOverlays.forEach(function (o) { try { o.setMap(null); } catch (_) {} });
+    _resultMapOverlays = [];
+    if (window.kakao && window.kakao.maps && window.kakao.maps.event) {
+      _renderedMarkerListeners.forEach(function (entry) {
+        try { window.kakao.maps.event.removeListener(entry.marker, 'click', entry.handler); } catch (_) {}
+      });
+    }
+    _renderedMarkerListeners.length = 0;
+    _resultMapMarkers.forEach(function (m) { try { m.setMap(null); } catch (_) {} });
+    _resultMapMarkers = [];
+  }
+
+  async function renderResultKakaoMap(spots) {
+    const kakao = await loadKakaoSdk();
+    const mySeq = ++_resultRenderSeq;
+    // 첫 렌더 때만 Map 인스턴스 생성 — 이후는 오버레이만 교체
+    if (!_resultMap) {
+      resultMapEl.innerHTML = '';
+      const center = new kakao.maps.LatLng(spots[0].lat, spots[0].lng);
+      _resultMap = new kakao.maps.Map(resultMapEl, { center: center, level: 8 });
+    } else {
+      clearResultMapOverlays();
+    }
+    const map = _resultMap;
+    const bounds = new kakao.maps.LatLngBounds();
+    spots.forEach(function (s) {
+      const pos = new kakao.maps.LatLng(s.lat, s.lng);
+      const color = DAY_COLORS[s.day] || DAY_COLORS[1];
+      const content =
+        '<div style="background:' + color + ';color:#fff;min-width:22px;height:22px;padding:0 6px;' +
+        'border-radius:11px;display:flex;align-items:center;justify-content:center;' +
+        'font-size:11px;font-weight:700;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);' +
+        'white-space:nowrap">Day ' + s.day + '</div>';
+      const overlay = new kakao.maps.CustomOverlay({ position: pos, content: content, map: map, yAnchor: 0.5, xAnchor: 0.5, zIndex: 5 });
+      _resultMapOverlays.push(overlay);
+      const info = new kakao.maps.InfoWindow({
+        content: '<div style="padding:6px 10px;font-size:12px;max-width:180px;white-space:nowrap">' +
+                 escapeHtml(s.name) + ' · Day ' + s.day + '</div>',
+      });
+      const marker = new kakao.maps.Marker({ position: pos, map: map, opacity: 0 });
+      const handler = function () { info.open(map, marker); };
+      kakao.maps.event.addListener(marker, 'click', handler);
+      _renderedMarkerListeners.push({ marker: marker, handler: handler });
+      _resultMapMarkers.push(marker);
+      bounds.extend(pos);
+    });
+    // 렌더 레이스 방지: 가장 최신 렌더 호출의 bounds만 적용
+    if (mySeq === _resultRenderSeq) {
+      map.setBounds(bounds, 40, 40, 40, 40);
+    }
+
+    // 타일 로드 실패(도메인 미등록 등) 시 SVG mock 으로 폴백 (첫 렌더만 감지)
+    if (!map.__tilesCheckAttached) {
+      map.__tilesCheckAttached = true;
+      let _tilesLoaded = false;
+      kakao.maps.event.addListener(map, 'tilesloaded', function () { _tilesLoaded = true; });
+      setTimeout(function () {
+        if (!_tilesLoaded) {
+          console.warn('Result map: Kakao 타일 로드 실패 — SVG mock 으로 폴백');
+          _resultMap = null;  // 폴백 시 다음에 재생성되도록 리셋
+          renderResultMockMap(spots);
+        }
+      }, 2500);
+    }
+  }
+
+  function renderResultMockMap(spots) {
+    if (!spots.length) { resultMapEl.innerHTML = ''; return; }
+    const W = 720, H = 260;
+    const lats = spots.map(s => s.lat), lngs = spots.map(s => s.lng);
+    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+    const pad = 40;
+    const toX = lng => maxLng === minLng ? W / 2 : pad + (lng - minLng) / (maxLng - minLng) * (W - pad * 2);
+    const toY = lat => maxLat === minLat ? H / 2 : pad + (maxLat - lat) / (maxLat - minLat) * (H - pad * 2);
+    resultMapEl.innerHTML =
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">' +
+        '<rect width="' + W + '" height="' + H + '" fill="#e8f0fe" rx="8"/>' +
+        spots.map(function (s) {
+          const color = DAY_COLORS[s.day] || DAY_COLORS[1];
+          const x = toX(s.lng), y = toY(s.lat);
+          return '<circle cx="' + x + '" cy="' + y + '" r="8" fill="' + color + '" stroke="#fff" stroke-width="2"/>' +
+                 '<text x="' + x + '" y="' + (y + 20) + '" text-anchor="middle" font-size="9" fill="#172B4D" font-family="sans-serif">' +
+                   escapeHtml(s.name.length > 5 ? s.name.slice(0, 5) + '…' : s.name) + '</text>';
+        }).join('') +
+      '</svg>';
+  }
+
+  function renderMapLegend(daysUsed) {
+    if (!resultMapLegend) return;
+    const items = daysUsed.map(function (d) {
+      return '<span class="result-map-legend-item">' +
+        '<span class="result-map-legend-dot" style="background:' + (DAY_COLORS[d] || DAY_COLORS[1]) + '"></span>' +
+        'Day ' + d + '</span>';
+    }).join('');
+    resultMapLegend.innerHTML = items;
+  }
+
+  async function updateResultMap(coursesForMap) {
+    if (!resultMapWrap || !resultMapEl) return;
+    const spots = collectSpotsForMap(coursesForMap);
+    if (!spots.length) {
+      resultMapWrap.style.display = 'none';
+      return;
+    }
+    resultMapWrap.style.display = '';
+    const daysUsed = Array.from(new Set(spots.map(s => s.day))).sort((a, b) => a - b);
+    renderMapLegend(daysUsed);
+    if (!window.KAKAO_MAP_KEY) {
+      renderResultMockMap(spots);
+      return;
+    }
+    try {
+      await renderResultKakaoMap(spots);
+    } catch (err) {
+      renderResultMockMap(spots);
+    }
+  }
 
   const typeLabels = {
     wheelchair: '휠체어',
@@ -520,6 +702,8 @@ loadWeather();
     const filtered = getFilteredCourses();
     renderSummary(filtered);
     renderCourses(filtered);
+    // 현재 필터/탭 결과의 모든 스팟을 지도에 표시 (비동기 업데이트)
+    updateResultMap(filtered);
   }
 
   function showRetryError() {
@@ -703,16 +887,13 @@ loadWeather();
     renderCurrentFilter();
   });
 
-  // P1: 스티키 Day탭 스크롤 방향 감지
-  (function setupStickyDayTab() {
+  // Day탭 바는 스크롤 방향에 따른 숨김/표시 애니메이션 없이 항상 고정 표시한다.
+  // (이전에는 위/아래 스크롤에 따라 translateY로 숨겼다가 나타나 UX가 어색했다.)
+  (function lockDayTabBar() {
     const bar = document.getElementById('dayTabBar');
     if (!bar) return;
-    let lastY = 0;
-    window.addEventListener('scroll', () => {
-      const y = window.scrollY;
-      bar.style.transform = y > lastY && y > 60 ? 'translateY(-100%)' : 'translateY(0)';
-      lastY = y;
-    }, { passive: true });
+    bar.style.transform = 'none';
+    bar.style.transition = 'none';
   })();
 
   init();

@@ -2,17 +2,7 @@
  * 무리없이 부산 — 코스 상세 + 지도 렌더링.
  */
 (async function () {
-  // B-005: runtime-config.js가 defer 로드될 경우 KAKAO_MAP_KEY 설정 대기
-  async function waitForKakaoKey(maxMs = 3000) {
-    if (window.KAKAO_MAP_KEY) return;
-    const step = 50;
-    for (let t = 0; t < maxMs; t += step) {
-      await new Promise(r => setTimeout(r, step));
-      if (window.KAKAO_MAP_KEY) return;
-    }
-  }
-  await waitForKakaoKey();
-
+  // runtime-config.js가 synchronous 로 로드되므로 별도의 키 대기 로직은 불필요하다.
   const urlId = new URLSearchParams(location.search).get('id');
   let course = AppState.selected_course;
 
@@ -165,6 +155,16 @@
     const bounds = new kakao.maps.LatLngBounds();
     spotList.forEach(s => bounds.extend(new kakao.maps.LatLng(s.lat, s.lng)));
     map.setBounds(bounds, 60);
+
+    // 타일 로드 실패(도메인 등록 안 됨 등) 대비 폴백
+    let _tilesLoaded = false;
+    kakao.maps.event.addListener(map, 'tilesloaded', function () { _tilesLoaded = true; });
+    setTimeout(function () {
+      if (!_tilesLoaded) {
+        console.warn('Course map: Kakao 타일 로드 실패 — SVG mock 으로 폴백');
+        renderMockMap(spotList, container);
+      }
+    }, 2500);
 
     return map;
   }
@@ -358,20 +358,30 @@
   const mapPc     = document.getElementById('mapAreaPc');
 
   async function initMaps(spotList) {
+    if (!spotList || !spotList.length) return;
+    // 유효 좌표만 필터링 (장소 추가 후 좌표 누락 방지)
+    const valid = spotList.filter(function (s) {
+      return typeof s.lat === 'number' && typeof s.lng === 'number' && !isNaN(s.lat) && !isNaN(s.lng);
+    });
+    if (!valid.length) return;
+
     if (window.KAKAO_MAP_KEY) {
       try {
         await loadKakaoSdk();
-        if (mapMobile) await renderKakaoMap(spotList, mapMobile);
-        if (mapPc)     await renderKakaoMap(spotList, mapPc);
+        if (mapMobile) await renderKakaoMap(valid, mapMobile);
+        if (mapPc)     await renderKakaoMap(valid, mapPc);
+        return;
       } catch (err) {
-        if (mapMobile) renderMockMap(spotList, mapMobile);
-        if (mapPc)     renderMockMap(spotList, mapPc);
+        console.warn('Kakao SDK 로드 실패, 요약 지도로 폴백:', err && err.message);
+        if (mapMobile) renderMockMap(valid, mapMobile);
+        if (mapPc)     renderMockMap(valid, mapPc);
         showToast('지도 SDK를 불러오지 못해 요약 지도로 표시했어요.', 'info');
+        return;
       }
-    } else {
-      if (mapMobile) renderMockMap(spotList, mapMobile);
-      if (mapPc)     renderMockMap(spotList, mapPc);
     }
+    // KAKAO_MAP_KEY 미설정 — 바로 mock
+    if (mapMobile) renderMockMap(valid, mapMobile);
+    if (mapPc)     renderMockMap(valid, mapPc);
   }
 
   await initMaps(spots);
@@ -429,19 +439,31 @@
     if (!resultsEl) return;
     resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">검색 중…</div>';
 
-    // SDK 로딩을 먼저 보장 (미로딩 시 여기서 로드)
+    // KAKAO_MAP_KEY가 없거나 SDK 로드가 실패하는 경우, 즉시 백엔드 fallback으로 전환한다.
+    // SDK 로드 자체를 기다리다 지연되는 경우도 있어 선제적으로 처리한다.
+    if (!window.KAKAO_MAP_KEY) {
+      try { await searchPlacesFallback(keyword); }
+      catch (_) {
+        resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">장소 검색에 실패했습니다. 다시 시도해주세요.</div>';
+      }
+      return;
+    }
+
     try {
       await loadKakaoSdk();
     } catch (err) {
-      resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">지도 SDK를 불러오지 못했습니다.<br>페이지를 새로고침해주세요.</div>';
+      // SDK 로드 실패 시 백엔드 fallback
+      try { await searchPlacesFallback(keyword); }
+      catch (_) {
+        resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">지도 SDK 및 백엔드 검색이 모두 실패했습니다.<br>네트워크를 확인 후 다시 시도해주세요.</div>';
+      }
       return;
     }
 
     if (!window.kakao?.maps?.services) {
-      // B-010: Places 서비스 미활성화 시 백엔드 API로 직접 폴백 (try-catch 보호)
-      try {
-        await searchPlacesFallback(keyword);
-      } catch (err) {
+      // Places 서비스 미활성화 시 백엔드 API로 직접 폴백
+      try { await searchPlacesFallback(keyword); }
+      catch (_) {
         if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">장소 검색에 실패했습니다. 다시 시도해주세요.</div>';
       }
       return;
@@ -452,12 +474,14 @@
       if (status === kakao.maps.services.Status.OK) {
         renderPlaceResults(data.slice(0, 10));
       } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-        resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">검색 결과가 없습니다.</div>';
+        // 결과 없음 시에도 백엔드 fallback으로 재시도해 TourAPI 결과까지 확인
+        try { await searchPlacesFallback(keyword); }
+        catch (_) {
+          resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">검색 결과가 없습니다.</div>';
+        }
       } else {
-        // B-010: 카카오 Places 실패 시 백엔드 API로 폴백 (try-catch 보호)
-        try {
-          await searchPlacesFallback(keyword);
-        } catch (err) {
+        try { await searchPlacesFallback(keyword); }
+        catch (_) {
           if (resultsEl) resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400)">장소 검색에 실패했습니다. 다시 시도해주세요.</div>';
         }
       }

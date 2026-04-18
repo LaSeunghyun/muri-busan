@@ -22,6 +22,7 @@
   const stepIndicator = document.getElementById('stepIndicator');
   const backBtn = document.getElementById('backBtn');
 
+  let _step3MapsInited = false;
   function showStep(n) {
     currentStep = n;
     steps.forEach((s, i) => {
@@ -39,6 +40,14 @@
       el.classList.toggle('done', i < n - 1);
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Step 3 진입 시 Kakao 지도 1회 초기화 (display:none 상태로는 지도 렌더가 불가능해 지연 로드)
+    if (n === 3 && !_step3MapsInited) {
+      _step3MapsInited = true;
+      setTimeout(function () {
+        initStep3Map('step3KakaoMap', 'step3MapFallback', 'mobile');
+        initStep3Map('step3KakaoMapPc', 'step3MapFallbackPc', 'pc');
+      }, 30);
+    }
   }
 
   /* 뒤로 가기 */
@@ -152,6 +161,152 @@
   });
 
   /* ── Step 3: 권역 선택 ── */
+  // 부산 9개 권역 좌표 (지도 마커용)
+  const AREA_COORDS = {
+    '해운대': { lat: 35.1631, lng: 129.1637 },
+    '남포':   { lat: 35.0977, lng: 129.0307 },
+    '영도':   { lat: 35.0910, lng: 129.0680 },
+    '기장':   { lat: 35.2446, lng: 129.2226 },
+    '수영':   { lat: 35.1455, lng: 129.1131 },
+    '서구':   { lat: 35.0976, lng: 129.0244 },
+    '사하':   { lat: 35.1045, lng: 128.9747 },
+    '남구':   { lat: 35.1334, lng: 129.0845 },
+    '북항':   { lat: 35.1115, lng: 129.0421 },
+  };
+  const BUSAN_CENTER = { lat: 35.1796, lng: 129.0756 };
+
+  /* Kakao Maps SDK 로더 (여러 페이지에서 재사용) */
+  let _kakaoLoader = null;
+  function loadKakaoSdk() {
+    if (window.kakao && window.kakao.maps && window.kakao.maps.LatLng) {
+      return Promise.resolve(window.kakao);
+    }
+    if (_kakaoLoader) return _kakaoLoader;
+    if (!window.KAKAO_MAP_KEY) {
+      return Promise.reject(new Error('KAKAO_MAP_KEY missing'));
+    }
+    _kakaoLoader = new Promise(function (resolve, reject) {
+      const existing = document.getElementById('kakao-map-sdk');
+      const finish = function () {
+        if (!window.kakao) { _kakaoLoader = null; return reject(new Error('kakao not ready')); }
+        window.kakao.maps.load(function () { resolve(window.kakao); });
+      };
+      if (existing) {
+        if (window.kakao) { finish(); return; }
+        existing.addEventListener('load', finish, { once: true });
+        existing.addEventListener('error', function (e) { _kakaoLoader = null; reject(e); }, { once: true });
+        setTimeout(function () { if (window.kakao) finish(); }, 200);
+        return;
+      }
+      const s = document.createElement('script');
+      s.id = 'kakao-map-sdk';
+      s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + window.KAKAO_MAP_KEY +
+              '&autoload=false&libraries=services';
+      s.onload = finish;
+      s.onerror = function (e) { _kakaoLoader = null; reject(e); };
+      document.head.appendChild(s);
+    });
+    return _kakaoLoader;
+  }
+
+  // 권역별 오버레이 ref를 저장해 칩/마커 상호 동기화에 활용
+  const _overlayRefs = { mobile: {}, pc: {} };
+
+  function buildAreaOverlay(area, selected) {
+    const wrap = document.createElement('div');
+    wrap.className = 'step3-area-marker' + (selected ? ' selected' : '');
+    wrap.textContent = area;
+    wrap.setAttribute('role', 'button');
+    wrap.setAttribute('tabindex', '0');
+    wrap.setAttribute('aria-label', area + ' 선택');
+    wrap.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      toggleArea(area);
+    });
+    wrap.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggleArea(area); }
+    });
+    return wrap;
+  }
+
+  function toggleArea(area) {
+    const areas = AppState.areas.slice();
+    const idx = areas.indexOf(area);
+    if (idx === -1) areas.push(area); else areas.splice(idx, 1);
+    AppState.areas = areas;
+    syncAreaChips();
+    syncMapMarkers();
+  }
+
+  function syncMapMarkers() {
+    const sel = new Set(AppState.areas);
+    ['mobile', 'pc'].forEach(function (key) {
+      Object.keys(_overlayRefs[key]).forEach(function (area) {
+        const el = _overlayRefs[key][area];
+        if (!el) return;
+        el.classList.toggle('selected', sel.has(area));
+      });
+    });
+  }
+
+  async function initStep3Map(containerId, fallbackId, refKey) {
+    const container = document.getElementById(containerId);
+    const fallback = document.getElementById(fallbackId);
+    if (!container) return;
+    if (!window.KAKAO_MAP_KEY) {
+      renderMapFallback(fallback, container);
+      return;
+    }
+    try {
+      await loadKakaoSdk();
+      const kakao = window.kakao;
+      const center = new kakao.maps.LatLng(BUSAN_CENTER.lat, BUSAN_CENTER.lng);
+      const map = new kakao.maps.Map(container, { center, level: 8, draggable: true });
+      Object.keys(AREA_COORDS).forEach(function (area) {
+        const c = AREA_COORDS[area];
+        const pos = new kakao.maps.LatLng(c.lat, c.lng);
+        const content = buildAreaOverlay(area, AppState.areas.indexOf(area) !== -1);
+        _overlayRefs[refKey][area] = content;
+        new kakao.maps.CustomOverlay({ position: pos, content: content, map: map, yAnchor: 0.5, xAnchor: 0.5, zIndex: 10 });
+      });
+      // 지도에 모든 권역이 보이도록 bounds 조정
+      const bounds = new kakao.maps.LatLngBounds();
+      Object.values(AREA_COORDS).forEach(function (c) {
+        bounds.extend(new kakao.maps.LatLng(c.lat, c.lng));
+      });
+      map.setBounds(bounds, 30, 30, 30, 30);
+
+      // 도메인 등록이 안 돼 있어 타일이 로드되지 않으면 2초 후 폴백으로 전환
+      let _tilesLoaded = false;
+      kakao.maps.event.addListener(map, 'tilesloaded', function () { _tilesLoaded = true; });
+      setTimeout(function () {
+        if (!_tilesLoaded) {
+          console.warn('Kakao 지도 타일 로드 실패 (도메인 등록 확인 필요) — 폴백 UI 전환');
+          renderMapFallback(fallback, container);
+        }
+      }, 2500);
+    } catch (err) {
+      console.warn('Kakao SDK 로드 실패, 폴백 UI 사용:', err && err.message);
+      renderMapFallback(fallback, container);
+    }
+  }
+
+  function renderMapFallback(fallback, container) {
+    if (!fallback) return;
+    if (container) container.style.display = 'none';
+    fallback.hidden = false;
+    fallback.innerHTML =
+      '<div class="step3-fallback-notice">🗺️ 지도를 불러오지 못했어요. 아래 지역 버튼으로 선택해주세요.</div>' +
+      '<div class="step3-fallback-grid">' +
+        Object.keys(AREA_COORDS).map(function (a) {
+          return '<button type="button" class="step3-fallback-chip" data-area="' + a + '">' + a + '</button>';
+        }).join('') +
+      '</div>';
+    fallback.querySelectorAll('.step3-fallback-chip').forEach(function (btn) {
+      btn.addEventListener('click', function () { toggleArea(btn.dataset.area); });
+    });
+  }
+
   function syncAreaChips() {
     const areas = AppState.areas;
     getAll('areaGrid').forEach(function (grid) {
@@ -161,6 +316,7 @@
         chip.setAttribute('aria-checked', sel ? 'true' : 'false');
       });
     });
+    syncMapMarkers();
   }
 
   getAll('areaGrid').forEach(function (grid) {

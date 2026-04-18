@@ -212,28 +212,10 @@
       </div>
       <h2 class="ob-title" id="step3Title">어디를 방문하고 싶으신가요?</h2>
       <p class="ob-subtitle">지도에서 지역을 누르거나 아래 버튼으로 선택하세요. 선택 안 하면 전체 지역을 추천해요.</p>
-      <!-- 부산 지역 참고 지도 -->
-      <div class="busan-map-wrap" aria-label="부산 지역 위치 참고 지도">
-        <svg class="busan-map-svg" viewBox="0 0 280 205" xmlns="http://www.w3.org/2000/svg">
-          <rect width="280" height="205" fill="#DBEAFE" rx="8"/>
-          <polygon fill="#FEF9F0" stroke="#C9B99A" stroke-width="1.5"
-            points="30,12 100,10 200,12 260,38 268,80 248,128 215,158 155,170 110,162 78,162 48,152 30,120"/>
-          <ellipse cx="118" cy="188" rx="22" ry="10" fill="#FEF9F0" stroke="#C9B99A" stroke-width="1"/>
-          <path d="M30,12 Q26,65 28,108 Q29,130 38,148" stroke="#93C5FD" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-          <text x="14" y="20" font-size="9" fill="#64748B" font-family="sans-serif">N</text>
-          <text x="14" y="198" font-size="9" fill="#64748B" font-family="sans-serif">S</text>
-          <text x="267" y="108" font-size="9" fill="#64748B" font-family="sans-serif">E</text>
-          <text x="4"  y="108" font-size="9" fill="#64748B" font-family="sans-serif">W</text>
-          <g class="map-mrk" data-area="기장">  <circle cx="250" cy="33" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="250" y="30" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">기장</text><text x="250" y="41" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">군</text></g>
-          <g class="map-mrk" data-area="해운대"><circle cx="228" cy="74" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="228" y="71" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">해운대</text><text x="228" y="82" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-          <g class="map-mrk" data-area="수영">  <circle cx="200" cy="110" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="200" y="107" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">수영</text><text x="200" y="118" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-          <g class="map-mrk" data-area="남구">  <circle cx="168" cy="144" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="168" y="141" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">남구</text><text x="168" y="152" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-          <g class="map-mrk" data-area="북항">  <circle cx="158" cy="83" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="158" y="80" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">북항</text><text x="158" y="91" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">동구</text></g>
-          <g class="map-mrk" data-area="남포">  <circle cx="128" cy="97" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="128" y="94" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">남포</text><text x="128" y="105" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">중구</text></g>
-          <g class="map-mrk" data-area="영도">  <circle cx="118" cy="188" r="13" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="118" y="186" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">영도</text><text x="118" y="195" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-          <g class="map-mrk" data-area="서구">  <circle cx="93"  cy="99" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="93"  y="96" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">서구</text><text x="93"  y="107" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-          <g class="map-mrk" data-area="사하">  <circle cx="62"  cy="146" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="62"  y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">사하</text><text x="62"  y="154" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-        </svg>
+      <!-- 부산 실제 지도 (Kakao Map SDK) -->
+      <div class="busan-map-wrap busan-map-wrap--live" aria-label="부산 지역 선택 지도">
+        <div class="busan-map-live" id="step3KakaoMap"></div>
+        <div class="busan-map-fallback" id="step3MapFallback" hidden></div>
       </div>
       <div class="area-chip-grid" id="areaGrid" role="group" aria-labelledby="step3Title">
         <button class="area-chip" data-area="해운대" role="checkbox" aria-checked="false">해운대</button>
@@ -258,28 +240,10 @@
         <p class="ob-subtitle">관심 지역을 선택하면 해당 권역 중심으로 추천합니다. 미선택 시 전체 지역 추천.</p>
       </div>
       <div class="ob-pc-right">
-        <!-- 부산 지역 참고 지도 (PC) -->
-        <div class="busan-map-wrap" aria-label="부산 지역 위치 참고 지도">
-          <svg class="busan-map-svg" viewBox="0 0 280 205" xmlns="http://www.w3.org/2000/svg">
-            <rect width="280" height="205" fill="#DBEAFE" rx="8"/>
-            <polygon fill="#FEF9F0" stroke="#C9B99A" stroke-width="1.5"
-              points="30,12 100,10 200,12 260,38 268,80 248,128 215,158 155,170 110,162 78,162 48,152 30,120"/>
-            <ellipse cx="118" cy="188" rx="22" ry="10" fill="#FEF9F0" stroke="#C9B99A" stroke-width="1"/>
-            <path d="M30,12 Q26,65 28,108 Q29,130 38,148" stroke="#93C5FD" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-            <text x="14" y="20" font-size="9" fill="#64748B" font-family="sans-serif">N</text>
-            <text x="14" y="198" font-size="9" fill="#64748B" font-family="sans-serif">S</text>
-            <text x="267" y="108" font-size="9" fill="#64748B" font-family="sans-serif">E</text>
-            <text x="4"  y="108" font-size="9" fill="#64748B" font-family="sans-serif">W</text>
-            <g class="map-mrk" data-area="기장">  <circle cx="250" cy="33" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="250" y="30" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">기장</text><text x="250" y="41" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">군</text></g>
-            <g class="map-mrk" data-area="해운대"><circle cx="228" cy="74" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="228" y="71" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">해운대</text><text x="228" y="82" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-            <g class="map-mrk" data-area="수영">  <circle cx="200" cy="110" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="200" y="107" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">수영</text><text x="200" y="118" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-            <g class="map-mrk" data-area="남구">  <circle cx="168" cy="144" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="168" y="141" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">남구</text><text x="168" y="152" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-            <g class="map-mrk" data-area="북항">  <circle cx="158" cy="83" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="158" y="80" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">북항</text><text x="158" y="91" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">동구</text></g>
-            <g class="map-mrk" data-area="남포">  <circle cx="128" cy="97" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="128" y="94" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">남포</text><text x="128" y="105" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">중구</text></g>
-            <g class="map-mrk" data-area="영도">  <circle cx="118" cy="188" r="13" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="118" y="186" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">영도</text><text x="118" y="195" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-            <g class="map-mrk" data-area="서구">  <circle cx="93"  cy="99" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="93"  y="96" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">서구</text><text x="93"  y="107" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-            <g class="map-mrk" data-area="사하">  <circle cx="62"  cy="146" r="15" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/><text x="62"  y="143" text-anchor="middle" font-size="9" font-weight="600" fill="#1e3a5f" font-family="sans-serif">사하</text><text x="62"  y="154" text-anchor="middle" font-size="7" fill="#64748B" font-family="sans-serif">구</text></g>
-          </svg>
+        <!-- 부산 실제 지도 (Kakao Map SDK, PC) -->
+        <div class="busan-map-wrap busan-map-wrap--live" aria-label="부산 지역 선택 지도">
+          <div class="busan-map-live" id="step3KakaoMapPc"></div>
+          <div class="busan-map-fallback" id="step3MapFallbackPc" hidden></div>
         </div>
         <div class="area-chip-grid" id="areaGridPc" role="group" aria-labelledby="step3TitlePc">
           <button class="area-chip" data-area="해운대" role="checkbox" aria-checked="false">해운대</button>
@@ -300,46 +264,9 @@
   </section>
 </div>
 
+<script src="/runtime-config.js"></script>
 <script src="/js/app.js"></script>
 <script src="/js/onboarding.js"></script>
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
-<script>
-// SVG 지도 ↔ 지역 칩 연동
-(function() {
-  function syncMapMarkers() {
-    document.querySelectorAll('.map-mrk').forEach(function(mrk) {
-      var area = mrk.dataset.area;
-      var selected = !!document.querySelector('.area-chip[data-area="' + area + '"][aria-checked="true"]');
-      var circle = mrk.querySelector('circle');
-      var texts = mrk.querySelectorAll('text');
-      if (selected) {
-        circle.setAttribute('fill', '#3B82F6');
-        circle.setAttribute('stroke', '#1D4ED8');
-        texts.forEach(function(t) { t.setAttribute('fill', '#FFFFFF'); });
-      } else {
-        circle.setAttribute('fill', '#EFF6FF');
-        circle.setAttribute('stroke', '#93C5FD');
-        texts[0] && texts[0].setAttribute('fill', '#1e3a5f');
-        texts[1] && texts[1].setAttribute('fill', '#64748B');
-      }
-    });
-  }
-  document.addEventListener('DOMContentLoaded', function() {
-    // SVG 마커 클릭 → 해당 칩 클릭
-    document.querySelectorAll('.map-mrk').forEach(function(mrk) {
-      mrk.style.cursor = 'pointer';
-      mrk.addEventListener('click', function() {
-        var area = this.dataset.area;
-        var chip = document.querySelector('.area-chip[data-area="' + area + '"]');
-        if (chip) { chip.click(); syncMapMarkers(); }
-      });
-    });
-    // 칩 클릭 시 지도 마커 동기화
-    document.addEventListener('click', function(e) {
-      if (e.target.closest('.area-chip')) setTimeout(syncMapMarkers, 50);
-    });
-  });
-})();
-</script>
 </body>
 </html>
