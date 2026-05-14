@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -195,6 +196,71 @@ async def rate_limit_middleware(request: Request, call_next):
         _rate_buckets[bucket_key] = fresh
 
     return await call_next(request)
+
+
+# ── 접속 로그 미들웨어 ─────────────────────────────────────────────
+# 정적 에셋 확장자 — 로그 제외 대상
+_STATIC_EXTS = {".css", ".js", ".png", ".jpg", ".jpeg", ".svg", ".ico",
+                ".woff", ".woff2", ".webp", ".gif", ".map", ".txt"}
+# 로그 제외 경로 prefix
+_SKIP_PREFIXES = ("/runtime-config.js",)
+
+
+def _should_log(path: str) -> bool:
+    ext = Path(path).suffix.lower()
+    if ext in _STATIC_EXTS:
+        return False
+    if any(path.startswith(p) for p in _SKIP_PREFIXES):
+        return False
+    return True
+
+
+def _save_access_log(ip: str, method: str, path: str,
+                     status_code: int, duration_ms: int, user_agent: str) -> None:
+    """동기 Supabase insert — ThreadPoolExecutor 내부에서 실행됨."""
+    from backend.services.supabase_client import get_client
+    client = get_client()
+    if not client:
+        return
+    try:
+        client.table("access_logs").insert({
+            "ip": ip,
+            "method": method,
+            "path": path,
+            "status_code": status_code,
+            "duration_ms": duration_ms,
+            "user_agent": user_agent[:512] if user_agent else None,
+        }).execute()
+    except Exception as e:
+        logger.debug("access_log Supabase 저장 실패: %s", e)
+
+
+@app.middleware("http")
+async def access_log_middleware(request: Request, call_next):
+    if not _should_log(request.url.path):
+        return await call_next(request)
+
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = int((time.perf_counter() - start) * 1000)
+
+    forwarded = request.headers.get("X-Forwarded-For")
+    ip = forwarded.split(",")[0].strip() if forwarded else (
+        request.client.host if request.client else "unknown"
+    )
+    method = request.method
+    path = request.url.path
+    status = response.status_code
+    ua = request.headers.get("User-Agent", "")
+
+    logger.info("ACCESS %s %s %d %dms %s", method, path, status, duration_ms, ip)
+
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(
+        None, _save_access_log, ip, method, path, status, duration_ms, ua
+    )
+
+    return response
 
 
 # 라우터 등록
