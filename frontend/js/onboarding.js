@@ -275,16 +275,6 @@
         bounds.extend(new kakao.maps.LatLng(c.lat, c.lng));
       });
       map.setBounds(bounds, 30, 30, 30, 30);
-
-      // 도메인 등록이 안 돼 있어 타일이 로드되지 않으면 2초 후 폴백으로 전환
-      let _tilesLoaded = false;
-      kakao.maps.event.addListener(map, 'tilesloaded', function () { _tilesLoaded = true; });
-      setTimeout(function () {
-        if (!_tilesLoaded) {
-          console.warn('Kakao 지도 타일 로드 실패 (도메인 등록 확인 필요) — 폴백 UI 전환');
-          renderMapFallback(fallback, container);
-        }
-      }, 2500);
     } catch (err) {
       console.warn('Kakao SDK 로드 실패, 폴백 UI 사용:', err && err.message);
       renderMapFallback(fallback, container);
@@ -295,16 +285,15 @@
     if (!fallback) return;
     if (container) container.style.display = 'none';
     fallback.hidden = false;
+    // 지도 없이 아래 area-chip-grid가 단독 담당 — 이중 표시 방지
     fallback.innerHTML =
-      '<div class="step3-fallback-notice">🗺️ 지도를 불러오지 못했어요. 아래 지역 버튼으로 선택해주세요.</div>' +
-      '<div class="step3-fallback-grid">' +
-        Object.keys(AREA_COORDS).map(function (a) {
-          return '<button type="button" class="step3-fallback-chip" data-area="' + a + '">' + a + '</button>';
-        }).join('') +
+      '<div class="step3-fallback-header">' +
+        '<span class="step3-fallback-icon">📍</span>' +
+        '<div class="step3-fallback-texts">' +
+          '<span class="step3-fallback-label">권역을 선택해주세요</span>' +
+          '<span class="step3-fallback-hint">미선택 시 전체 지역을 추천해요</span>' +
+        '</div>' +
       '</div>';
-    fallback.querySelectorAll('.step3-fallback-chip').forEach(function (btn) {
-      btn.addEventListener('click', function () { toggleArea(btn.dataset.area); });
-    });
   }
 
   function syncAreaChips() {
@@ -345,7 +334,8 @@
 
       getAll('step3Next').forEach(function (b) {
         b.disabled = true;
-        b.textContent = '추천 코스 분석 중...';
+        b.classList.add('loading');
+        b.innerHTML = '<span class="btn-spinner"></span>추천 코스 분석 중...';
       });
 
       typeof logInteraction === 'function' && logInteraction('onboarding_complete', {
@@ -360,6 +350,7 @@
       if (!result?.courses?.length) {
         getAll('step3Next').forEach(function (b) {
           b.disabled = false;
+          b.classList.remove('loading');
           b.textContent = '코스 추천받기 →';
         });
         showToast('추천 결과를 가져올 수 없습니다. 다시 시도해주세요.', 'error');

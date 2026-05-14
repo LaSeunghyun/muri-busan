@@ -138,20 +138,6 @@ loadWeather();
     if (mySeq === _resultRenderSeq) {
       map.setBounds(bounds, 40, 40, 40, 40);
     }
-
-    // 타일 로드 실패(도메인 미등록 등) 시 SVG mock 으로 폴백 (첫 렌더만 감지)
-    if (!map.__tilesCheckAttached) {
-      map.__tilesCheckAttached = true;
-      let _tilesLoaded = false;
-      kakao.maps.event.addListener(map, 'tilesloaded', function () { _tilesLoaded = true; });
-      setTimeout(function () {
-        if (!_tilesLoaded) {
-          console.warn('Result map: Kakao 타일 로드 실패 — SVG mock 으로 폴백');
-          _resultMap = null;  // 폴백 시 다음에 재생성되도록 리셋
-          renderResultMockMap(spots);
-        }
-      }, 2500);
-    }
   }
 
   function renderResultMockMap(spots) {
@@ -632,7 +618,7 @@ loadWeather();
         </div>
         ${course.ai_description ? `
         <div class="course-ai-block">
-          <span class="course-ai-label">✦ AI 추천 이유</span>
+          <span class="course-ai-label">✦ 추천 이유</span>
           <p class="course-ai-desc">${escapeHtml(course.ai_description)}</p>
           ${course.ai_highlights?.length ? `<div class="course-ai-chips">${course.ai_highlights.map(h=>`<span class="ai-chip">${escapeHtml(h)}</span>`).join('')}</div>` : ''}
           ${course.ai_tip ? `<div class="course-ai-tip">💡 ${escapeHtml(course.ai_tip)}</div>` : ''}
@@ -657,7 +643,7 @@ loadWeather();
           ).join('')}
         </div>
         <div class="course-card-footer">
-          <span class="source">${course.ai_description ? 'AI + 공공데이터 기반 추천' : '공공데이터 기반 추천'}</span>
+          <span class="source">${course.ai_description ? '공공데이터 기반 추천 이유' : '공공데이터 기반 추천'}</span>
           <span class="arrow" aria-hidden="true">→</span>
         </div>`;
 

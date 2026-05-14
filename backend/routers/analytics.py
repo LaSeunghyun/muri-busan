@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException  # HTTPException: interaction 400에 사용
 from pydantic import BaseModel, Field
 
 from backend.services.supabase_client import get_client
@@ -68,7 +68,7 @@ async def log_recommendation(req: RecommendLogRequest):
         return RecommendLogResponse(ok=True, log_id=log_id)
     except Exception as e:
         logger.warning("추천 로그 저장 실패: %s", e)
-        raise HTTPException(status_code=500, detail="추천 로그 저장에 실패했어요. 잠시 후 다시 시도해주세요.")
+        return RecommendLogResponse(ok=False, log_id=None)
 
 
 @router.post("/api/log/survey", response_model=SurveyResponse)
@@ -92,7 +92,7 @@ async def log_survey(req: SurveyRequest):
         return SurveyResponse(ok=True, survey_id=survey_id)
     except Exception as e:
         logger.warning("만족도 저장 실패: %s", e)
-        raise HTTPException(status_code=500, detail="설문 저장에 실패했어요. 잠시 후 다시 시도해주세요.")
+        return SurveyResponse(ok=False, survey_id=None)
 
 
 # ── 사용자 인터랙션 로그 ────────────────────────────────────────────────
@@ -105,6 +105,7 @@ ALLOWED_EVENT_TYPES = {
     "refresh_click",      # "다시 분석" 클릭
     "edit_conditions",    # "조건 수정" 클릭
     "share_click",        # 공유 버튼 클릭
+    "onboarding_step",    # 온보딩 단계 전환
     "onboarding_complete", # 온보딩 완료 (추천 요청 직전)
     "survey_skip",        # 만족도 조사 건너뜀
 }
@@ -114,7 +115,7 @@ class InteractionLogRequest(BaseModel):
     session_id: str = Field(..., min_length=1, max_length=128)
     log_id: Optional[str] = None
     event_type: str = Field(..., min_length=1, max_length=64)
-    event_data: dict[str, Any] = Field(default_factory=dict)
+    event_data: dict[str, Any] = Field(default_factory=dict, max_length=20)  # 키 20개 이하
 
 
 class InteractionLogResponse(BaseModel):

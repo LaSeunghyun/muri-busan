@@ -9,8 +9,10 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import json as _json
+
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from backend.store import course_store
 
@@ -73,9 +75,20 @@ def cleanup_expired_shares() -> int:
         conn.close()
 
 
+_MAX_COURSE_BYTES = 64 * 1024  # 64 KB
+
+
 class ShareRequest(BaseModel):
     course_id: str | None = None
     course: dict | None = None
+
+    @model_validator(mode="after")
+    def _check_payload_size(self):
+        if self.course is not None:
+            size = len(_json.dumps(self.course, ensure_ascii=False).encode())
+            if size > _MAX_COURSE_BYTES:
+                raise ValueError(f"course 페이로드가 너무 큽니다 ({size} bytes > {_MAX_COURSE_BYTES})")
+        return self
 
 
 class ShareResponse(BaseModel):
@@ -127,6 +140,8 @@ async def create_share(req: ShareRequest):
 
 @router.get("/api/share/{token}")
 async def get_share(token: str):
+    if not token or len(token) > 32 or not token.isalnum():
+        raise HTTPException(status_code=400, detail="유효하지 않은 공유 토큰입니다.")
     conn = _get_conn()
     try:
         row = conn.execute(

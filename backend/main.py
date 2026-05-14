@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -25,7 +26,7 @@ from fastapi.staticfiles import StaticFiles
 from backend.routers import analytics, courses, meta, recommend, report, search, share, spot_detail, weather
 
 
-_REQUIRED_ENV_VARS = ["TOUR_API_KEY", "GEMINI_API_KEY"]
+_REQUIRED_ENV_VARS = ["TOUR_API_KEY"]
 
 
 @asynccontextmanager
@@ -121,11 +122,17 @@ async def security_headers_middleware(request: Request, call_next):
 # ── Rate Limiting (경량 미들웨어) ──────────────────────────────────
 # 경로별 제한: (최대 요청 수, 윈도우 초)
 _RATE_LIMITS: dict[str, tuple[int, int]] = {
-    "/api/recommend": (10, 60),   # IP당 분당 10회
-    "/api/share": (20, 60),       # IP당 분당 20회 (POST만)
+    "/api/recommend": (10, 60),      # IP당 분당 10회
+    "/api/share": (20, 60),          # IP당 분당 20회
     "/api/log/recommend": (30, 60),  # IP당 분당 30회
-    "/api/log/survey": (10, 60),     # IP당 분당 10회 (같은 세션이 여러번 제출 방지)
+    "/api/log/survey": (10, 60),     # IP당 분당 10회
 }
+# GET 엔드포인트별 분당 제한 (동적 경로는 prefix 매칭)
+_RATE_LIMITS_GET_PREFIXES: list[tuple[str, int, int]] = [
+    ("/api/share/", 60, 60),    # 공유 링크 조회: 분당 60회
+    ("/api/courses/", 60, 60),  # 코스 상세 조회: 분당 60회
+    ("/api/reports/", 30, 60),  # 신고 목록 조회: 분당 30회
+]
 _rate_buckets: dict[str, list[float]] = defaultdict(list)
 # 주기적 전체 청소용 카운터 (빈 bucket이 무제한으로 쌓이는 것 방지)
 _rate_gc_counter = 0
@@ -150,10 +157,21 @@ def _gc_rate_buckets(now: float) -> None:
 async def rate_limit_middleware(request: Request, call_next):
     global _rate_gc_counter
     path = request.url.path
-    limit_config = _RATE_LIMITS.get(path)
-    if limit_config and request.method == "POST":
+
+    # POST 엔드포인트 정확 매칭
+    limit_config = _RATE_LIMITS.get(path) if request.method == "POST" else None
+    # GET 엔드포인트 prefix 매칭 (동적 경로 대응)
+    if limit_config is None and request.method == "GET":
+        for prefix, max_req, win in _RATE_LIMITS_GET_PREFIXES:
+            if path.startswith(prefix):
+                limit_config = (max_req, win)
+                break
+
+    if limit_config:
         max_requests, window_sec = limit_config
-        client_ip = request.client.host if request.client else "unknown"
+        # X-Forwarded-For 헤더로 실제 클라이언트 IP 추출 (CDN/프록시 환경 대응)
+        forwarded = request.headers.get("X-Forwarded-For")
+        client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
         bucket_key = f"{client_ip}:{path}"
         now = time.time()
 
@@ -178,6 +196,71 @@ async def rate_limit_middleware(request: Request, call_next):
         _rate_buckets[bucket_key] = fresh
 
     return await call_next(request)
+
+
+# ── 접속 로그 미들웨어 ─────────────────────────────────────────────
+# 정적 에셋 확장자 — 로그 제외 대상
+_STATIC_EXTS = {".css", ".js", ".png", ".jpg", ".jpeg", ".svg", ".ico",
+                ".woff", ".woff2", ".webp", ".gif", ".map", ".txt"}
+# 로그 제외 경로 prefix
+_SKIP_PREFIXES = ("/runtime-config.js",)
+
+
+def _should_log(path: str) -> bool:
+    ext = Path(path).suffix.lower()
+    if ext in _STATIC_EXTS:
+        return False
+    if any(path.startswith(p) for p in _SKIP_PREFIXES):
+        return False
+    return True
+
+
+def _save_access_log(ip: str, method: str, path: str,
+                     status_code: int, duration_ms: int, user_agent: str) -> None:
+    """동기 Supabase insert — ThreadPoolExecutor 내부에서 실행됨."""
+    from backend.services.supabase_client import get_client
+    client = get_client()
+    if not client:
+        return
+    try:
+        client.table("access_logs").insert({
+            "ip": ip,
+            "method": method,
+            "path": path,
+            "status_code": status_code,
+            "duration_ms": duration_ms,
+            "user_agent": user_agent[:512] if user_agent else None,
+        }).execute()
+    except Exception as e:
+        logger.debug("access_log Supabase 저장 실패: %s", e)
+
+
+@app.middleware("http")
+async def access_log_middleware(request: Request, call_next):
+    if not _should_log(request.url.path):
+        return await call_next(request)
+
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = int((time.perf_counter() - start) * 1000)
+
+    forwarded = request.headers.get("X-Forwarded-For")
+    ip = forwarded.split(",")[0].strip() if forwarded else (
+        request.client.host if request.client else "unknown"
+    )
+    method = request.method
+    path = request.url.path
+    status = response.status_code
+    ua = request.headers.get("User-Agent", "")
+
+    logger.info("ACCESS %s %s %d %dms %s", method, path, status, duration_ms, ip)
+
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(
+        None, _save_access_log, ip, method, path, status, duration_ms, ua
+    )
+
+    return response
 
 
 # 라우터 등록
